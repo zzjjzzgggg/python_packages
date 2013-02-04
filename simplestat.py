@@ -78,4 +78,3 @@ def getCDF(pdf):
 
 if __name__=='__main__':
 	statAll([1,1,2,3,4,6])
-
