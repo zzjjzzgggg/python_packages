@@ -3,9 +3,9 @@
 from iotools import FileIO
 from math import sqrt
 import numpy
-from scipy.stats import scoreatpercentile
 
 def summary(data):
+	from scipy.stats import scoreatpercentile
 	q1 = scoreatpercentile(data,25)
 	q3 = scoreatpercentile(data,75)
 	md = numpy.median(data)
