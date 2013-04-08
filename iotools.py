@@ -12,7 +12,7 @@ class FileReader:
 			self.fr=open(fname)
 			self.readline=self.__readline
 		elif ext == '.bz2':
-			self.fr=bz2.BZ2File(fname)
+			self.fr=bz2.open(fname)
 			self.readline=self.__readline2
 		elif ext =='.gz':
 			self.fr=gzip.open(fname)
@@ -76,16 +76,20 @@ class FileIO:
 	def getFlts(self):
 		return map(float, self.items)
 
-	def getShortTime(self, i):
+	def getShortDate(self, i):
 		return datetime.strptime(self.items[i], '%Y-%m-%d')
 
-	def getTime(self, i):
+	def getDate(self, i):
 		return datetime.strptime(self.items[i], '%Y-%m-%d %H:%M:%S')
 	
-	def fromTimestamp(self, i):
+	def getDateFromTimestamp(self, i):
 		return datetime.fromtimestamp(int(self.items[i]))
+	
+	def getTimestamp(self, i):
+		d=self.getDate(i)
+		return int(time.mktime(d.timetuple()))
 
-	def getISOTime(self, i):
+	def getISODate(self, i):
 		return datetime.strptime(self.items[i][:19], '%Y-%m-%dT%H:%M:%S')
 	
 	def getLN(self):

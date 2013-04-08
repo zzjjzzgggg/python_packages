@@ -16,7 +16,7 @@ def statAll(samples, fnm='stats.dat', sep='\t'):
 	if hasWeight: minX, maxX = min(samples)[0], max(samples)[0]
 	else: minX, maxX = min(samples), max(samples)
 	L=maxX+1
-	pdf, cdf, ccdf=[0]*L,[0]*L, [0]*(L+1)
+	pdf, cdf, ccdf=[0]*L, [0]*L, [0]*(L+1)
 	sumv=0
 	if hasWeight:
 		for v, w in samples: 
