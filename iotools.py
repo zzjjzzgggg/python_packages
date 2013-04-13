@@ -4,37 +4,45 @@
 from datetime import datetime
 import os, time, json, bz2, gzip
 
-
 class FileReader:
 	def __init__(self, fname):
 		ext = os.path.splitext(fname)[1]
-		if ext == '.dat': 
-			self.fr=open(fname)
-			self.readline=self.__readline
-		elif ext == '.bz2':
-			self.fr=bz2.open(fname)
-			self.readline=self.__readline2
-		elif ext =='.gz':
-			self.fr=gzip.open(fname)
-			self.readline=self.__readline2
-		else: 
-			self.fr=open(fname)
-			self.readline=self.__readline
+		if ext == '.dat': self.fr=open(fname)
+		elif ext == '.bz2':	self.fr=bz2.open(fname, 'rt')
+		elif ext =='.gz': self.fr=gzip.open(fname, 'rt')
+		else: self.fr=open(fname)
 	
-	def __readline(self):
+	def readline(self):
 		return self.fr.readline().strip()
 	
-	def __readline2(self):
-		return self.fr.readline().decode('utf8')
-
 	def close(self):
 		self.fr.close()
 
+class FileWriter:
+	def __init__(self, fname):
+		ext = os.path.splitext(fname)[1]
+		if ext == '.bz2': self.f=bz2.open(fname, 'wt')
+		elif ext =='.gz': self.f=gzip.open(fname, 'wt')
+		else: self.f=open(fname, 'w')
+	
+	def __enter__(self):
+		return self
+	
+	def __exit__(self,*exc):
+		self.close()
+		return False
+
+	def write(self, l):
+		self.f.write(l)
+	
+	def close(self):
+		self.f.close()
+
 class FileIO:
-	def __init__(self, fname, sep='\t', ann='#'):
+	def __init__(self, fname, sep='\t', com='#'):
 		print('Loading file', fname)
 		self.sep=sep
-		self.ann=ann
+		self.com=com
 		self.ln=0
 		self.fr=FileReader(fname)
 	
@@ -42,7 +50,7 @@ class FileIO:
 		return self
 	
 	def __exit__(self,*exc):
-		if not self.fr: self.fr.close()
+		self.fr.close()
 		return False
 	
 	def next(self):
@@ -52,7 +60,7 @@ class FileIO:
 				self.fr.close()
 				print('Totally', self.ln, 'lines.')
 				return False
-			if self.l[0]!=self.ann:
+			if self.l[0]!=self.com:
 				self.ln+=1
 				self.items=self.l.strip().split(self.sep)
 				return True
@@ -128,44 +136,39 @@ class JsonStorer:
 		self.writed=0
 		print('Storer closed!')
 
-def saveList(slist, fnm, anno=None):
-	fw=open(fnm, 'w')
-	fw.write('#file: '+fnm+'\n')
-	if anno is not None: fw.write(anno.strip()+'\n')
-	for e in slist: fw.write(str(e)+'\n')
-	fw.close()
+def saveList(slist, fnm, anno=None, com='#'):
+	with FileWriter(fnm) as fw:
+		fw.write(com+'file: '+fnm+'\n')
+		if anno is not None: fw.write(anno.strip()+'\n')
+		for e in slist: fw.write(str(e)+'\n')
 
-def saveLists(slist, fnm, anno=None):
-	fw=open(fnm, 'w')
-	fw.write('# file: '+fnm+'\n')
-	if anno is not None: fw.write('# '+anno.strip()+'\n')
-	for e in slist: fw.write('\t'.join(map(str, e))+'\n')
-	fw.close()
+def saveLists(slist, fnm, anno=None, com='#'):
+	with FileWriter(fnm) as fw:
+		fw.write(com+'file: '+fnm+'\n')
+		if anno is not None: fw.write(anno.strip()+'\n')
+		for e in slist: fw.write('\t'.join(map(str, e))+'\n')
 
-def saveMap(tmap, fnm, anno=None):
-	fw=open(fnm, 'w')
-	fw.write('#file: '+fnm+'\n')
-	if anno is not None: fw.write(anno.strip()+'\n')
-	for k,v in sorted(tmap.items()): fw.write('%s\t%s\n' % (str(k), str(v)))
-	fw.close()
+def saveMap(tmap, fnm, anno=None, com='#'):
+	with FileWriter(fnm) as fw:
+		fw.write(com+'file: '+fnm+'\n')
+		if anno is not None: fw.write(anno.strip()+'\n')
+		for k,v in sorted(tmap.items()): fw.write('%s\t%s\n' % (str(k), str(v)))
 
-def saveSet(sset, fnm, anno=None):
-	fw=open(fnm, 'w')
-	fw.write('#file: '+fnm+'\n')
-	if anno is not None: fw.write(anno.strip()+'\n')
-	for e in sset: fw.write(str(e)+'\n')
-	fw.close()
+def saveSet(sset, fnm, anno=None, com='#'):
+	with FileWriter(fnm) as fw:
+		fw.write(com+'file: '+fnm+'\n')
+		if anno is not None: fw.write(anno.strip()+'\n')
+		for e in sset: fw.write(str(e)+'\n')
 
-def saveTuples(dat, fnm, anno=None):
-	fw=open(fnm, 'w')
-	fw.write('#file: '+fnm+'\n')
-	if anno is not None: fw.write(anno.strip()+'\n')
-	for e in dat: fw.write('\t'.join(map(str, e))+'\n')
-	fw.close()
+def saveTuples(dat, fnm, anno=None, com='#'):
+	with FileWriter(fnm) as fw:
+		fw.write(com+'file: '+fnm+'\n')
+		if anno is not None: fw.write(anno.strip()+'\n')
+		for e in dat: fw.write('\t'.join(map(str, e))+'\n')
 
-def loadList(fname, col=0):
+def loadList(fname, col=0, com='#'):
 	rst=[]
-	fio=FileIO(fname)
+	fio=FileIO(fname, com=com)
 	while fio.next(): rst.append(fio.getStr(col))
 	return rst
 
@@ -187,15 +190,15 @@ def loadIntMap(fnm, ckey=0, cval=1):
 	while fio.next(): rst[fio.getInt(ckey)]=fio.getInt(cval)
 	return rst
 
-def loadStrIntMap(fnm, ckey=0, cval=1):
+def loadStrIntMap(fnm, ckey=0, cval=1, com='#'):
 	rst={}
-	fio=FileIO(fnm)
+	fio=FileIO(fnm, com=com)
 	while fio.next(): rst[fio.getStr(ckey)]=fio.getInt(cval)
 	return rst
 
-def loadIntStrMap(fnm, ckey=0, cval=1):
+def loadIntStrMap(fnm, ckey=0, cval=1, com='#'):
 	rst={}
-	fio=FileIO(fnm)
+	fio=FileIO(fnm, com=com)
 	while fio.next(): rst[fio.getInt(ckey)]=fio.getStr(cval)
 	return rst
 
@@ -205,15 +208,15 @@ def loadIntFltMap(fnm, ckey=0, cval=1):
 	while fio.next(): rst[fio.getInt(ckey)]=fio.getFlt(cval)
 	return rst
 
-def loadStrFltMap(fnm, ckey=0, cval=1):
+def loadStrFltMap(fnm, ckey=0, cval=1, com='#'):
 	rst={}
-	fio=FileIO(fnm)
+	fio=FileIO(fnm, com=com)
 	while fio.next(): rst[fio.getStr(ckey)]=fio.getFlt(cval)
 	return rst
 
-def loadSet(fnm, c=0):
+def loadSet(fnm, c=0, com='#'):
 	rst=set()
-	fio=FileIO(fnm)
+	fio=FileIO(fnm, com=com)
 	while fio.next(): rst.add(fio.getStr(c))
 	return rst
 
@@ -243,5 +246,6 @@ def loadIntFltPrMap(fnm):
 
 def writeFile(fnm, data):
 	if data is None or len(data)==0: return
-	with open(fnm, 'w') as fw: fw.write(data)
+	with FileWriter(fnm) as fw:
+		fw.write(data)
 
