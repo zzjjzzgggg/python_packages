@@ -38,6 +38,13 @@ class FileIO:
 		self.ln=0
 		self.fr=FileReader(fname)
 	
+	def __enter__(self):
+		return self
+	
+	def __exit__(self,*exc):
+		if not self.fr: self.fr.close()
+		return False
+	
 	def next(self):
 		while True:
 			self.l=self.fr.readline()
