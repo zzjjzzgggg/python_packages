@@ -31,9 +31,10 @@ class FileReader:
 		self.fr.close()
 
 class FileIO:
-	def __init__(self, fname, sep='\t'):
+	def __init__(self, fname, sep='\t', ann='#'):
 		print('Loading file', fname)
 		self.sep=sep
+		self.ann=ann
 		self.ln=0
 		self.fr=FileReader(fname)
 	
@@ -44,7 +45,7 @@ class FileIO:
 				self.fr.close()
 				print('Totally', self.ln, 'lines.')
 				return False
-			if self.l[0]!='#':
+			if self.l[0]!=self.ann:
 				self.ln+=1
 				self.items=self.l.strip().split(self.sep)
 				return True
