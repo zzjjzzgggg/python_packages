@@ -45,9 +45,9 @@ def statAll(samples, fnm='stats.dat', sep='\t'):
 	fw.write('#total: %.2f\n' % sumv)
 	fw.write('#expectation: %.2f\n' % exp)
 	fw.write('#variance: %.6f\n' % sqrt(var-exp*exp))
-	fw.write('#X, PDF, CDF, CCDF\n')
+	fw.write('#X, FREQ, PDF, CDF, CCDF\n')
 	for i in range(L):
-		if pdf[i]+ccdf[i+1]>1E-10: fw.write(('%d'+sep+'%.10f'+sep+'%.10f'+sep+'%.10f\n') % (i, pdf[i], cdf[i], ccdf[i+1]))
+		if pdf[i]+ccdf[i+1]>1E-10: fw.write(sep.join(('%d','%d','%.10f','%.10f','%.10f\n')) % (i, pdf[i]*sumv, pdf[i], cdf[i], ccdf[i+1]))
 	fw.close()
 
 def ccdf(pdf, ccdf_fnm='ccdf.csv', sep=','):

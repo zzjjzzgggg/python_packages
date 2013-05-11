@@ -2,7 +2,7 @@
 #encoding: utf-8
 
 from datetime import datetime
-import os, time, json, bz2, gzip
+import os, sys, time, json, bz2, gzip
 
 class FileReader:
 	def __init__(self, fname):
@@ -40,7 +40,8 @@ class FileWriter:
 
 class FileIO:
 	def __init__(self, fname, sep='\t', com='#'):
-		print('Loading file', fname)
+		print('Loading file', fname, end=' ... ')
+		sys.stdout.flush()
 		self.sep=sep
 		self.com=com
 		self.ln=0
@@ -58,7 +59,7 @@ class FileIO:
 			self.l=self.fr.readline()
 			if not self.l:
 				self.fr.close()
-				print('Totally', self.ln, 'lines.')
+				print('totally', self.ln, 'lines.')
 				return False
 			if self.l[0]!=self.com:
 				self.ln+=1
@@ -140,31 +141,17 @@ def saveList(slist, fnm, anno=None, com='#'):
 	with FileWriter(fnm) as fw:
 		fw.write(com+'file: '+fnm+'\n')
 		if anno is not None: fw.write(anno.strip()+'\n')
-		for e in slist: fw.write(str(e)+'\n')
-
-def saveLists(slist, fnm, anno=None, com='#'):
-	with FileWriter(fnm) as fw:
-		fw.write(com+'file: '+fnm+'\n')
-		if anno is not None: fw.write(anno.strip()+'\n')
-		for e in slist: fw.write('\t'.join(map(str, e))+'\n')
+		for e in slist: 
+			if type(e) is tuple or type(e) is list: fw.write('\t'.join(map(str, e))+'\n')
+			else: fw.write(str(e)+'\n')
 
 def saveMap(tmap, fnm, anno=None, com='#'):
 	with FileWriter(fnm) as fw:
 		fw.write(com+'file: '+fnm+'\n')
 		if anno is not None: fw.write(anno.strip()+'\n')
-		for k,v in sorted(tmap.items()): fw.write('%s\t%s\n' % (str(k), str(v)))
-
-def saveSet(sset, fnm, anno=None, com='#'):
-	with FileWriter(fnm) as fw:
-		fw.write(com+'file: '+fnm+'\n')
-		if anno is not None: fw.write(anno.strip()+'\n')
-		for e in sset: fw.write(str(e)+'\n')
-
-def saveTuples(dat, fnm, anno=None, com='#'):
-	with FileWriter(fnm) as fw:
-		fw.write(com+'file: '+fnm+'\n')
-		if anno is not None: fw.write(anno.strip()+'\n')
-		for e in dat: fw.write('\t'.join(map(str, e))+'\n')
+		for k,e in sorted(tmap.items()): 
+			if type(e) is tuple or type(e) is list: fw.write(str(k)+'\t'+'\t'.join(map(str, e))+'\n')
+			else: fw.write('%s\t%s\n' % (str(k), str(e)))
 
 def loadList(fname, col=0, com='#'):
 	rst=[]
