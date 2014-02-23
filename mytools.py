@@ -2,6 +2,7 @@
 #encoding: utf-8
 
 import re
+import time
 
 rex_num = re.compile('\d+')
 
@@ -17,5 +18,10 @@ def getLstNum(ss, ignore_comma=False):
 	nums=getNums(ss, ignore_comma)
 	return 0 if len(nums)==0 else nums[-1]
 
+def timestamp(sec=True):
+	if sec: return int(time.time())
+	else: return int(time.time()*1000)
+
 if __name__=='__main__':
 	print(getNums('asdfsa_12,34_asdf_456', True))
+	print(timestamp())
