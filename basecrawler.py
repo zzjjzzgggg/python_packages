@@ -46,7 +46,7 @@ class BaseCrawler(object):
 		"""
 		self.max_curls = max_concurrent
 		self.__loop_interval = loop_interval
-		self.free_curl_cnt = self.max_curls
+		self.__free_curl_cnt = self.max_curls
 		self.__curls = [None for i in range(self.max_curls)]
 		self.__multi_curl = pycurl.CurlMulti()
 		self.__send_buffer = []			# 发送缓冲区
@@ -102,9 +102,9 @@ class BaseCrawler(object):
 			# dispatch自定义函数已经退出，且发送缓冲区已经没有request，
 			# 且没有request正在下载
 			if self.__dispatch_closed and not self.__send_buffer and \
-			self.free_curl_cnt == self.max_curls: break
+			self.__free_curl_cnt == self.max_curls: break
 			# multicurl从发送缓冲区接受尽可能多的request直至达到最大并发
-			while self.free_curl_cnt > 0:
+			while self.__free_curl_cnt > 0:
 				req = None
 				try:
 					req = self.__send_buffer.pop(0)
@@ -128,7 +128,7 @@ class BaseCrawler(object):
 						req.curl.id = i
 						self.__curls[i] = req
 						self.__multi_curl.add_handle(req.curl)
-						self.free_curl_cnt -= 1
+						self.__free_curl_cnt -= 1
 						break
 			while True:
 				ret, active_num = self.__multi_curl.perform()
@@ -138,12 +138,12 @@ class BaseCrawler(object):
 				queued_num, ok_list, err_list = self.__multi_curl.info_read()
 				for c in ok_list:
 					self.__multi_curl.remove_handle(c)
-					self.free_curl_cnt += 1
+					self.__free_curl_cnt += 1
 					self.handle_ok(self.__curls[c.id])
 					self.__curls[c.id] = None
 				for c, errno, errmsg in err_list:
 					self.__multi_curl.remove_handle(c)
-					self.free_curl_cnt += 1
+					self.__free_curl_cnt += 1
 					req = self.__curls[c.id]
 					self.__curls[c.id] = None
 					if req.retry > 0:
