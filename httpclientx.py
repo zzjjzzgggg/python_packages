@@ -7,15 +7,16 @@ import json, lxml.html, feedparser
 
 class HttpClientX:
 	def __init__(self, proxy=None, encode='utf-8'):
-		cookie_hdr = urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar())
+		self.cookies = http.cookiejar.CookieJar()
+		cookie_hdr = urllib.request.HTTPCookieProcessor(self.cookies)
 		proxydic={} if proxy is None else {'http':proxy, 'https':proxy}
 		proxy_hdr = urllib.request.ProxyHandler(proxydic)
 		self.opener = urllib.request.build_opener(cookie_hdr, proxy_hdr)
 		self.opener.addheaders = [('User-agent','Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1')]
 		self.proxy=proxy
 		self.encode=encode
-		self.timeout=10
-		self.delay=3
+		self.timeout=7
+		self.delay=2
 		self.tries=5
 		self.cont=None
 	
@@ -51,8 +52,9 @@ class HttpClientX:
 		for l in f: cont+=l.decode(self.encode)
 		return cont
 
-	def get(self, url, ct='html', data=None):
-		cont = self.cont = self.__get(url, self.__read, data)
+	def get(self, url, ct='html', datDic=None):
+		dat=None if datDic is None else urllib.parse.urlencode(datDic).encode('utf-8')
+		cont = self.cont = self.__get(url, self.__read, dat)
 		if cont is None: return None
 		if ct == 'html': return cont
 		elif ct == 'json': return json.loads(cont)
@@ -61,11 +63,11 @@ class HttpClientX:
 		else: return cont
 	
 	def post(self, url, datdic, ct='html'):
-		tmp = {}
-		for k, v in datdic.items():
-			tmp[k] = v if not isinstance(v, dict) else json.dumps(v)
-		dat=urllib.parse.urlencode(tmp).encode('utf8')
-		return self.get(url, ct, dat)
+		#tmp = {}
+		#for k, v in datdic.items():
+		#	tmp[k] = v if not isinstance(v, dict) else json.dumps(v)
+		#dat=urllib.parse.urlencode(tmp).encode('utf-8')
+		return self.get(url, ct, datdic)
 
 	def save(self, fname):
 		if self.cont is None: return
@@ -78,8 +80,8 @@ class HttpClientX:
 	def isOK(self):
 		return self.code==200 or self.code==404
 	
-	def getHTML(self):
-		return self.cont
+	def getCookieDict(self):
+		return {cookie.name:cookie.value for cookie in self.cookies}
 	
 
 if __name__=='__main__':
