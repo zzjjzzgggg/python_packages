@@ -143,7 +143,7 @@ class JsonStorer:
 
 def saveList(slist, fnm, anno=None, com='#'):
 	with FileWriter(fnm) as fw:
-		fw.write(com+'file: '+fnm+'\n')
+		fw.write(com+'file: '+fnm+'\n'+com+'Len: %d\n'%len(slist))
 		if anno is not None: fw.write(anno.strip()+'\n')
 		for e in slist: 
 			if type(e) is tuple or type(e) is list: fw.write('\t'.join(map(str, e))+'\n')
