@@ -78,6 +78,13 @@ class FileIO:
 
 	def get(self, i):
 		return self.items[i]
+	
+	def gets(self, types, indexes):
+		try:
+			return [tpe(self.items[idx]) for tpe,idx in zip(types, indexes)]
+		except IndexError as e:
+			print(e, self.l)
+		return None
 
 	def getStr(self, i):
 		return self.items[i]
