@@ -21,7 +21,7 @@ class BaseRequest(object):
 		self.curl = pycurl.Curl()
 		self.prior = False	# 该值为True时请求插入缓冲区前部
 		self.retry = 3		# 当设置有retry次数时，请求执行失败后将会再次放入缓冲区
-		self.type = type	
+		self.type = type
 
 	def __del__(self):
 		self.curl.close()
@@ -40,7 +40,7 @@ class BaseRequest(object):
 class BaseCrawler(object):
 	"""最基础的爬虫框架，基于Pycurl的异步机制和协程实现。"""
 
-	def __init__(self, max_concurrent, loop_interval):
+	def __init__(self, max_concurrent, loop_interval=1):
 		"""max_concurrent:最大异步并发数
 		   loop_interval:当没有得到下载结果时主循环的延时
 		"""
@@ -115,7 +115,7 @@ class BaseCrawler(object):
 					else:
 						try:
 							self.__dispatching = True
-							cpu = yield
+							yield
 							self.__dispatching = False
 						except GeneratorExit:
 							self.__dispatch_closed = True

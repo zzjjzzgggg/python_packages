@@ -124,20 +124,21 @@ class FileIO:
 		return self.ln
 
 class JsonStorer:
-	def __init__(self, prefix, sufix='.json', data_dir='data/'):
+	def __init__(self, prefix, mx_rows=1000000, sufix='.json.gz', data_dir='data/'):
 		self.fw=None
 		self.writed=0
+		self.mx_rows=mx_rows
 		self.data_dir=data_dir
 		if not os.path.exists(data_dir): os.mkdir(data_dir)
 		self.prefix, self.sufix=prefix, sufix
 	
 	def __check(self):
-		if self.writed>=50000 and self.fw is not None: self.close()
+		if self.writed>=self.mx_rows and self.fw is not None: self.close()
 		if self.fw is None:
-			self.fw=open(self.data_dir+self.prefix+str(time.time())+self.sufix, 'w')
+			self.fw=FileWriter(self.data_dir+self.prefix+str(int(time.time()))+self.sufix)
 			self.writed=0
 
-	def save(self, item):
+	def write(self, item):
 		self.__check()
 		self.fw.write(json.dumps(item)+'\n')
 		self.writed+=1
@@ -252,3 +253,5 @@ def writeFile(fnm, data):
 	with FileWriter(fnm) as fw:
 		fw.write(data)
 
+def readFile(fnm):
+	return None

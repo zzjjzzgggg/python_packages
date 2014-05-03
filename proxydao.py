@@ -22,15 +22,23 @@ class ProxyDAO(object):
 		item = self.db.http.find_one({'_id':pid})
 		return item['proxy'] if item else None
 	
-	def getHttpProxyRandom(self, id_range):
-		return None if not id_range else self.getHttpProxy(random.randint(id_range[0], id_range[1]))
+	def getHttpProxyRandom(self, id_range=[]):
+		cnt = self.db.http.count()
+		if cnt == 0: return None
+		if len(id_range)==0: id_range=[0,cnt]
+		elif id_range[1]>cnt: id_range[1]=cnt
+		return self.getHttpProxy(random.randint(id_range[0], id_range[1]))
 
 	def getHttpsProxy(self, pid):
 		item = self.db.https.find_one({'_id':pid})
 		return item['proxy'] if item else None
 
 	def getHttpsProxyRandom(self, id_range):
-		return None if not id_range else self.getHttpsProxy(random.randint(id_range[0], id_range[1]))
+		cnt = self.db.https.count()
+		if cnt == 0: return None
+		if len(id_range)==0: id_range=[0,cnt]
+		elif id_range[1]>cnt: id_range[1]=cnt
+		return self.getHttpsProxy(random.randint(id_range[0], id_range[1]))
 
 	def count(self):
 		return self.db.proxy.count()
@@ -43,6 +51,5 @@ class ProxyDAO(object):
 
 if __name__=='__main__':
 	dao=ProxyDAO()
-	print(dao.count())
 	print(dao.getHttpProxyRandom(None))
 	print(dao.getHttpsProxyRandom((1,3)))
