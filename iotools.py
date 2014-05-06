@@ -212,6 +212,9 @@ def loadStrFltMap(fnm, ckey=0, cval=1, com='#'):
 	while fio.next(): rst[fio.getStr(ckey)]=fio.getFlt(cval)
 	return rst
 
+def saveSet(slist, fnm, anno=None, com='#'):
+	saveList(slist, fnm, anno=None, com='#')
+
 def loadSet(fnm, c=0, com='#'):
 	rst=set()
 	fio=FileIO(fnm, com=com, echo=False)
