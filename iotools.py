@@ -151,7 +151,7 @@ class JsonStorer:
 def saveList(slist, f, anno=None, com='#'):
 	if type(f)==str:
 		with FileWriter(f) as fw:
-			fw.write(com+'file: '+fnm+'\n'+com+'Len: %d\n'%len(slist))
+			fw.write(com+'file: '+f+'\n'+com+'Len: %d\n'%len(slist))
 			if anno is not None: fw.write(anno.strip()+'\n')
 			for e in slist: 
 				if type(e) is tuple or type(e) is list: 
@@ -240,14 +240,20 @@ def loadFltSet(fnm, c=0):
 	while fio.next(): rst.add(fio.getFlt(c))
 	return rst
 
+def loadIntPrSet(fnm, rst=None):
+	if rst is None: rst=set()
+	fio=FileIO(fnm,echo=False)
+	while fio.next(): rst.add((fio.getInt(0), fio.getInt(1)))
+	return rst
+
 def loadIntPrList(fnm, rst=None):
-	if rst==None: rst=[]
+	if rst is None: rst=[]
 	fio=FileIO(fnm,echo=False)
 	while fio.next(): rst.append((fio.getInt(0), fio.getInt(1)))
 	return rst
 
 def loadFltPrList(fnm, rst=None):
-	if rst==None: rst=[]
+	if rst is None: rst=[]
 	fio=FileIO(fnm,echo=False)
 	while fio.next(): rst.append((fio.getFlt(0), fio.getFlt(1)))
 	return rst
