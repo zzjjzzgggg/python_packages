@@ -38,6 +38,9 @@ class FileWriter:
 	def write(self, l):
 		self.f.write(l)
 	
+	def flush(self):
+		self.f.flush()
+	
 	def close(self):
 		self.f.close()
 
@@ -145,6 +148,7 @@ class JsonStorer:
 		self.__check()
 		self.fw.write(json.dumps(item)+'\n')
 		self.writed+=1
+		self.fw.flush()
 	
 	def close(self):
 		if self.fw is not None: self.fw.close()
