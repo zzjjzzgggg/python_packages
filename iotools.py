@@ -15,6 +15,9 @@ class FileReader:
 	def readline(self):
 		return self.fr.readline().strip()
 	
+	def readlines(self):
+		return [l for l in self.fr]
+	
 	def close(self):
 		self.fr.close()
 
@@ -135,7 +138,7 @@ class JsonStorer:
 	def __check(self):
 		if self.writed>=self.mx_rows and self.fw is not None: self.close()
 		if self.fw is None:
-			self.fw=FileWriter(self.data_dir+self.prefix+str(int(time.time()))+self.sufix)
+			self.fw=FileWriter('{}{}_{:.0f}{}'.format(self.data_dir, self.prefix, time.time(), self.sufix))
 			self.writed=0
 
 	def write(self, item):
@@ -181,6 +184,12 @@ def loadIntList(fname, col=0):
 	rst=[]
 	fio=FileIO(fname, echo=False)
 	while fio.next(): rst.append(fio.getInt(col))
+	return rst
+
+def loadIntFltList(fname, c1=0, c2=1):
+	rst=[]
+	fio=FileIO(fname, echo=False)
+	while fio.next(): rst.append((fio.getInt(c1),fio.getFlt(c2)))
 	return rst
 
 def loadFltList(fname, col=0):
@@ -264,10 +273,13 @@ def loadIntFltPrMap(fnm):
 	while fio.next(): rst[fio.getInt(0)] = (fio.getFlt(1), fio.getFlt(2))
 	return rst
 
-def writeFile(fnm, data):
+def writeFile(data, fnm):
 	if data is None or len(data)==0: return
 	with FileWriter(fnm) as fw:
 		fw.write(data)
 
 def readFile(fnm):
-	return None
+	fr = FileReader(fnm)
+	lines = fr.readlines()
+	fr.close()
+	return ''.join(lines)

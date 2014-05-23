@@ -9,6 +9,7 @@ import signal
 signal.signal(signal.SIGPIPE, signal.SIG_IGN)
 
 import time
+import io
 import pycurl
 
 pycurl.global_init(pycurl.GLOBAL_ALL)
@@ -21,7 +22,7 @@ class BaseRequest(object):
 		self.curl = pycurl.Curl()
 		self.prior = False	# 该值为True时请求插入缓冲区前部
 		self.retry = 3		# 当设置有retry次数时，请求执行失败后将会再次放入缓冲区
-		self.type = type
+		self.type = None
 
 	def __del__(self):
 		self.curl.close()
@@ -36,6 +37,78 @@ class BaseRequest(object):
 		"""
 		pass
 
+class CommonRequest(BaseRequest):
+	""" A Common Request """
+	def __init__(self, url, timeout=20, https=False, httpsproxytunnel=False):
+		super(CommonRequest, self).__init__()
+		self.curl.setopt(pycurl.NOSIGNAL, 1)
+		self.curl.setopt(pycurl.FOLLOWLOCATION, 1)
+		self.curl.setopt(pycurl.URL, url)
+		self.curl.setopt(pycurl.CONNECTTIMEOUT, 50)
+		self.curl.setopt(pycurl.TIMEOUT, timeout)
+		self.curl.setopt(pycurl.COOKIEFILE, '')		# enable cookie support
+		if https:
+			self.curl.setopt(pycurl.SSL_VERIFYPEER, 0)
+			self.curl.setopt(pycurl.SSL_VERIFYHOST, 0)
+		if httpsproxytunnel:
+			self.curl.setopt(pycurl.HTTPPROXYTUNNEL, 1)
+		self.fp = self.hp = None
+
+	def __del__(self):
+		if self.fp is not None: self.fp.close()
+		if self.hp is not None: self.hp.close()
+		super(CommonRequest, self).__del__()
+
+	def reset(self):
+		if self.fp is not None: self.fp.close()
+		if self.hp is not None: self.hp.close()
+		self.fp = io.BytesIO()
+		self.hp = io.BytesIO()
+		self.curl.setopt(pycurl.WRITEFUNCTION, self.fp.write)
+		self.curl.setopt(pycurl.HEADERFUNCTION, self.hp.write)
+
+	def set_proxy(self, proxy):
+		self.curl.setopt(pycurl.PROXY, proxy)
+	
+	def set_url(self, url):
+		self.curl.setopt(pycurl.URL, url)
+	
+	def set_header(self, header):
+		self.curl.setopt(pycurl.HTTPHEADER, header)
+	
+	def set_cookie(self, cookie):
+		self.curl.setopt(pycurl.COOKIE, cookie)
+	
+	def set_post(self, encoded_postdata):
+		self.curl.setopt(pycurl.POSTFIELDS, encoded_postdata)
+	
+	def perform(self):
+		self.reset()
+		self.curl.perform()
+
+	def get_response_header(self):
+		try:
+			return self.hp.getvalue().decode('utf-8')
+		except UnicodeError:
+			return None
+	
+	def get_content(self):
+		try:
+			return self.fp.getvalue().decode('utf-8')
+		except UnicodeError:
+			return None
+	
+	def get_cookie_list(self):
+		''' \t seperated [key value ..., key value ...] list '''
+		return self.curl.getinfo(pycurl.INFO_COOKIELIST)
+	
+	def get_cookie_str(self):
+		''' get a cookie string in the format: "name1:content1; name2:content2;" '''
+		cookies = []
+		for row in self.get_cookie_list():
+			items = row.split('\t')
+			cookies.append(items[-2]+'='+items[-1])
+		return '; '.join(cookies)
 
 class BaseCrawler(object):
 	"""最基础的爬虫框架，基于Pycurl的异步机制和协程实现。"""
@@ -44,10 +117,10 @@ class BaseCrawler(object):
 		"""max_concurrent:最大异步并发数
 		   loop_interval:当没有得到下载结果时主循环的延时
 		"""
-		self.max_curls = max_concurrent
+		self.max_concurrent = max_concurrent
 		self.__loop_interval = loop_interval
-		self.__free_curl_cnt = self.max_curls
-		self.__curls = [None for i in range(self.max_curls)]
+		self.__free_cnt = self.max_concurrent
+		self.__reqs = [None for i in range(self.max_concurrent)]
 		self.__multi_curl = pycurl.CurlMulti()
 		self.__send_buffer = []			# 发送缓冲区
 		self.__looper = None
@@ -55,8 +128,11 @@ class BaseCrawler(object):
 		self.__dispatching = False		# 控制send函数
 		self.__dispatch_closed = False	# dispatch是否已经退出
 	
-	def len_buf(self):
+	def len_send_buf(self):
 		return len(self.__send_buffer)
+	
+	def finished(self):
+		return self.__free_cnt == self.max_concurrent
 
 	def __del__(self):
 		self.__multi_curl.close()
@@ -66,16 +142,19 @@ class BaseCrawler(object):
 	def send(self, request):
 		"""Put a request into the buffer."""
 		request.reset()
-		if request.prior is True: self.__send_buffer.insert(0, request)
-		else: self.__send_buffer.append(request)
-		if self.__dispatching: self.__looper.send(None)
+		if request.prior:
+			self.__send_buffer.insert(0, request)
+		else:
+			self.__send_buffer.append(request)
+		if self.__dispatching:
+			next(self.__looper)
 
 	def suspend(self):
 		"""挂起dispatch进程，调用resume将恢复dispatch的执行。
 		   该函数只能在dispatch中调用。
 		"""
 		self.__suspending = True
-		self.__looper.send(None)
+		next(self.__looper)
 
 	def resume(self):
 		"""恢复dispatch的执行。该函数不能在dispatch中调用。"""
@@ -99,36 +178,29 @@ class BaseCrawler(object):
 		调函数分别处理下载结果。
 		"""
 		while True:
-			# dispatch自定义函数已经退出，且发送缓冲区已经没有request，
-			# 且没有request正在下载
-			if self.__dispatch_closed and not self.__send_buffer and \
-			self.__free_curl_cnt == self.max_curls: break
-			# multicurl从发送缓冲区接受尽可能多的request直至达到最大并发
-			while self.__free_curl_cnt > 0:
+			if self.__dispatch_closed and self.len_send_buf() == 0 and self.finished(): break
+			while self.__free_cnt > 0:
 				req = None
 				try:
 					req = self.__send_buffer.pop(0)
-				# 当缓冲区中没有请求时先调用dispatch填充发送缓冲区，
-				# 直到达到最大并发数或dispatch挂起
 				except IndexError:
 					if self.__suspending: break
-					else:
-						try:
-							self.__dispatching = True
-							yield
-							self.__dispatching = False
-						except GeneratorExit:
-							self.__dispatch_closed = True
-							self.__suspending = True
-							self.__dispatching = False
-							break
+					try:
+						self.__dispatching = True
+						yield
+						self.__dispatching = False
+					except GeneratorExit: # will be raised by close()
+						self.__dispatch_closed = True
+						self.__suspending = True
+						self.__dispatching = False
+						break
 				if req is None: continue
-				for i,k in enumerate(self.__curls):
+				for i,k in enumerate(self.__reqs):
 					if k is None:
 						req.curl.id = i
-						self.__curls[i] = req
+						self.__reqs[i] = req
 						self.__multi_curl.add_handle(req.curl)
-						self.__free_curl_cnt -= 1
+						self.__free_cnt -= 1
 						break
 			while True:
 				ret, active_num = self.__multi_curl.perform()
@@ -138,14 +210,14 @@ class BaseCrawler(object):
 				queued_num, ok_list, err_list = self.__multi_curl.info_read()
 				for c in ok_list:
 					self.__multi_curl.remove_handle(c)
-					self.__free_curl_cnt += 1
-					self.handle_ok(self.__curls[c.id])
-					self.__curls[c.id] = None
+					self.__free_cnt += 1
+					self.handle_ok(self.__reqs[c.id])
+					self.__reqs[c.id] = None
 				for c, errno, errmsg in err_list:
 					self.__multi_curl.remove_handle(c)
-					self.__free_curl_cnt += 1
-					req = self.__curls[c.id]
-					self.__curls[c.id] = None
+					self.__free_cnt += 1
+					req = self.__reqs[c.id]
+					self.__reqs[c.id] = None
 					if req.retry > 0:
 						req.retry -= 1
 						self.send(req)
@@ -155,11 +227,12 @@ class BaseCrawler(object):
 	def run(self):
 		"""Start Crawler"""
 		self.__looper = self.__loop()
-		next(self.__looper)
+		self.__looper.send(None)
 		self.dispatch()
 		try:
-			self.__looper.close()
-		except RuntimeError as e: print(e)
+			self.__looper.close() # will raised a GeneratorExit exception
+		except RuntimeError as e:
+			print(e)
 
 
 ###############################################################################
