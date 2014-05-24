@@ -265,6 +265,12 @@ def loadIntPrList(fnm, rst=None):
 	while fio.next(): rst.append((fio.getInt(0), fio.getInt(1)))
 	return rst
 
+def loadStrPrList(fnm, rst=None):
+	if rst is None: rst=[]
+	fio=FileIO(fnm,echo=False)
+	while fio.next(): rst.append((fio.getStr(0), fio.getStr(1)))
+	return rst
+
 def loadFltPrList(fnm, rst=None):
 	if rst is None: rst=[]
 	fio=FileIO(fnm,echo=False)
