@@ -67,24 +67,23 @@ def get_pdf(samples, fnm=None):
 			for k,v in pdf: fw.write('{:d}\t{:.6e}\n'.format(k,v))
 	return pdf
 
-def get_ccdf(pdf, ccdf_fnm='ccdf.csv', sep='\t'):
-	''' pdf is a list of tuple [(x, px)...] '''
-	maxX=max(pdf, key=lambda x: x[0])[0]
-	L=maxX+1
-	pdf2, ccdf, sumv=[0]*L, [0]*(L+1), 0.0
-	for i,v in pdf:
-		ccdf[i]=pdf2[i]=v
-		sumv+=v
-	for i in range(L-2, 0, -1): ccdf[i]+=ccdf[i+1]
-	fw=FileWriter(ccdf_fnm)
-	fw.write('#max X: %d\n' % maxX)
-	fw.write('#total: %.2f\n' % sumv)
-	fw.write('#X, PDF, CCDF\n')
-	for i in range(L):
-		v1, v2= pdf2[i]/sumv, ccdf[i+1]/sumv
-		if v1>1E-12 and v2>1E-12:
-			fw.write('{1:d}{0}{2:.6e}{0}{3:.6e}\n'.format(sep, i, v1, v2))
-	fw.close()
+def get_ccdf(pdf, fnm=None, sep='\t'):
+	''' Input: pdf is a list of tuple [(x, px), ...].
+			x must be an integer, and x>=0.
+			The pdf does not need to be normlized.
+		Return: a CCDF list, [P(X>-1), P(X>0), ..., P(X>max_X-1)]
+	'''
+	L = max(pdf, key=lambda x: x[0])[0] + 1
+	ccdf =[0]*L
+	for x,y in pdf: ccdf[x]=y
+	for x in range(L-2, -1, -1): ccdf[x]+=ccdf[x+1]
+	for x in range(L-1, -1, -1): ccdf[x]/=ccdf[0]
+	if fnm is not None:
+		fw=FileWriter(fnm)
+		for i in range(L):
+			fw.write('{1:d}{0}{2:.6e}\n'.format(sep, i-1, ccdf[i]))
+		fw.close()
+	return ccdf
 
 def get_ccdf_from_samples(sampels, fnm):
 	pdf = get_pdf(samples)
@@ -100,4 +99,6 @@ def get_cdf(pdf):
 	return cdf
 
 if __name__=='__main__':
-	statAll([1,1,2,3,4,6])
+	#statAll([1,1,2,3,4,6])
+	pdf = [(0,3), (1,2), (5,1)]
+	print(get_ccdf(pdf, 'test'))

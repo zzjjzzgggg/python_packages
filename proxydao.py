@@ -20,14 +20,24 @@ class ProxyDAO(object):
 	
 	def getHttpProxy(self, pid):
 		item = self.db.http.find_one({'_id':pid})
-		return item['proxy'] if item else None
+		return (item['proxy'], item['delay']) if item is not None else (None,None)
 	
 	def getHttpProxyRandom(self, id_range=[]):
 		cnt = self.db.http.count()
-		if cnt == 0: return None
-		if len(id_range)==0: id_range=[0,cnt]
+		if cnt == 0: return (None,None)
+		if len(id_range)==0: id_range=[1,cnt]
 		elif id_range[1]>cnt: id_range[1]=cnt
 		return self.getHttpProxy(random.randint(id_range[0], id_range[1]))
+	
+	def getRndHttpSmart(self, nrequires=50):
+		cnt = self.db.http.find({'delay':{'$lte':1}}).count()
+		if cnt > nrequires: return self.getHttpProxyRandom([1,cnt])
+		cnt = self.db.http.find({'delay':{'$lte':2}}).count()
+		if cnt > nrequires: return self.getHttpProxyRandom([1,cnt])
+		cnt = self.db.http.find({'delay':{'$lte':5}}).count()
+		if cnt > nrequires: return self.getHttpProxyRandom([1,cnt])
+		return self.getHttpProxyRandom()
+
 
 	def getHttpsProxy(self, pid):
 		item = self.db.https.find_one({'_id':pid})
@@ -36,7 +46,7 @@ class ProxyDAO(object):
 	def getHttpsProxyRandom(self, id_range):
 		cnt = self.db.https.count()
 		if cnt == 0: return None
-		if len(id_range)==0: id_range=[0,cnt]
+		if len(id_range)==0: id_range=[1,cnt]
 		elif id_range[1]>cnt: id_range[1]=cnt
 		return self.getHttpsProxy(random.randint(id_range[0], id_range[1]))
 
@@ -48,8 +58,29 @@ class ProxyDAO(object):
 		for proxy in self.db.http.find(): rst.add(proxy['proxy'])
 		for proxy in self.db.https.find(): rst.add(proxy['proxy'])
 		return rst
+	
+	def info(self):
+		nhttp = self.db.http.count()
+		nhttps = self.db.https.count()
+		print('total http proxies:', nhttp, 'total https proxies:', nhttps)
+		nhttp = self.db.http.find({'delay':{'$lte':1}}).count()
+		nhttps = self.db.https.find({'delay':{'$lte':1}}).count()
+		print('http proxies with delay < 1 sec:', nhttp, 'https proxies with delay < 1 sec:', nhttps)
+		nhttp = self.db.http.find({'delay':{'$lte':2}}).count()
+		nhttps = self.db.https.find({'delay':{'$lte':2}}).count()
+		print('http proxies with delay < 2 sec:', nhttp, 'https proxies with delay < 2 sec:', nhttps)
+	
+	def test(self):
+		#for item in self.db.http.find():
+		#	print('{:.4f}'.format(item['delay']))
+		for i in range(100):
+			proxy, delay = self.getRndHttpSmart(80)
+			print(proxy, delay)
+			print('{:.4f}'.format(delay))
 
 if __name__=='__main__':
 	dao=ProxyDAO()
-	print(dao.getHttpProxyRandom(None))
-	print(dao.getHttpsProxyRandom((1,3)))
+	#print(dao.getHttpProxyRandom(None))
+	#print(dao.getHttpsProxyRandom((1,3)))
+	dao.info()
+	#print(dao.getRndHttpSmart(10))

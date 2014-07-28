@@ -145,6 +145,7 @@ class JsonStorer:
 			self.writed=0
 
 	def write(self, item):
+		if item is None: return
 		self.__check()
 		self.fw.write(json.dumps(item)+'\n')
 		self.writed+=1
@@ -169,6 +170,10 @@ def saveList(slist, f, anno=None, com='#'):
 			if type(e) is tuple or type(e) is list: 
 				f.write('\t'.join(map(str, e))+'\n')
 			else: f.write(str(e)+'\n')
+
+def saveIntFltV(dat, fnm):
+	with FileWriter(fnm) as fw:
+		for x,y in dat: fw.write('{:d}\t{:.6e}\n'.format(x,y))
 
 def saveMap(tmap, fnm, anno=None, com='#'):
 	with FileWriter(fnm) as fw:
@@ -277,6 +282,13 @@ def loadFltPrList(fnm, rst=None):
 	while fio.next(): rst.append((fio.getFlt(0), fio.getFlt(1)))
 	return rst
 
+
+def loadIntsList(fnm, rst=None):
+	if rst is None: rst=[]
+	fio=FileIO(fnm,echo=False)
+	while fio.next(): rst.append(fio.getInts())
+	return rst
+
 def loadIntFltPrMap(fnm):
 	rst={}
 	fio=FileIO(fnm, echo=False)
@@ -285,8 +297,7 @@ def loadIntFltPrMap(fnm):
 
 def writeFile(data, fnm):
 	if data is None or len(data)==0: return
-	with FileWriter(fnm) as fw:
-		fw.write(data)
+	with FileWriter(fnm) as fw: fw.write(data)
 
 def readFile(fnm):
 	fr = FileReader(fnm)

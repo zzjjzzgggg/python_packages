@@ -39,20 +39,22 @@ class BaseRequest(object):
 
 class CommonRequest(BaseRequest):
 	""" A Common Request """
-	def __init__(self, url, timeout=20, https=False, httpsproxytunnel=False):
+	def __init__(self,url,timeout=20,https=False,httpsproxytunnel=False):
 		super(CommonRequest, self).__init__()
 		self.curl.setopt(pycurl.NOSIGNAL, 1)
 		self.curl.setopt(pycurl.FOLLOWLOCATION, 1)
 		self.curl.setopt(pycurl.URL, url)
 		self.curl.setopt(pycurl.CONNECTTIMEOUT, 50)
 		self.curl.setopt(pycurl.TIMEOUT, timeout)
-		self.curl.setopt(pycurl.COOKIEFILE, '')		# enable cookie support
+		self.curl.setopt(pycurl.COOKIEFILE, '')	  # enable cookie support
+		self.curl.setopt(pycurl.USERAGENT, 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:27.0) Gecko/20100101 Firefox/28.0')
 		if https:
 			self.curl.setopt(pycurl.SSL_VERIFYPEER, 0)
 			self.curl.setopt(pycurl.SSL_VERIFYHOST, 0)
 		if httpsproxytunnel:
 			self.curl.setopt(pycurl.HTTPPROXYTUNNEL, 1)
 		self.fp = self.hp = None
+		self.encode = 'utf8' # content encoding
 
 	def __del__(self):
 		if self.fp is not None: self.fp.close()
@@ -88,27 +90,33 @@ class CommonRequest(BaseRequest):
 
 	def get_response_header(self):
 		try:
-			return self.hp.getvalue().decode('utf-8')
-		except UnicodeError:
+			return self.hp.getvalue().decode(self.encode)
+		except UnicodeError as e:
+			print(e)
 			return None
 	
 	def get_content(self):
 		try:
-			return self.fp.getvalue().decode('utf-8')
+			return self.fp.getvalue().decode(self.encode)
 		except UnicodeError:
-			return None
+			pass
+		return None
 	
 	def get_cookie_list(self):
 		''' \t seperated [key value ..., key value ...] list '''
 		return self.curl.getinfo(pycurl.INFO_COOKIELIST)
 	
 	def get_cookie_str(self):
-		''' get a cookie string in the format: "name1:content1; name2:content2;" '''
+		''' get a cookie string in the format: "k1:v1; k2:v2; ...; kn:vn" '''
 		cookies = []
 		for row in self.get_cookie_list():
 			items = row.split('\t')
 			cookies.append(items[-2]+'='+items[-1])
 		return '; '.join(cookies)
+	
+	def get_total_time(self):
+		''' get the total time of seconds for previous transfer '''
+		return self.curl.getinfo(pycurl.TOTAL_TIME)
 
 class BaseCrawler(object):
 	"""最基础的爬虫框架，基于Pycurl的异步机制和协程实现。"""
@@ -128,12 +136,6 @@ class BaseCrawler(object):
 		self.__dispatching = False		# 控制send函数
 		self.__dispatch_closed = False	# dispatch是否已经退出
 	
-	def len_send_buf(self):
-		return len(self.__send_buffer)
-	
-	def finished(self):
-		return self.__free_cnt == self.max_concurrent
-
 	def __del__(self):
 		self.__multi_curl.close()
 		self.__multi_curl = None
@@ -142,12 +144,9 @@ class BaseCrawler(object):
 	def send(self, request):
 		"""Put a request into the buffer."""
 		request.reset()
-		if request.prior:
-			self.__send_buffer.insert(0, request)
-		else:
-			self.__send_buffer.append(request)
-		if self.__dispatching:
-			next(self.__looper)
+		if request.prior: self.__send_buffer.insert(0, request)
+		else: self.__send_buffer.append(request)
+		if self.__dispatching: next(self.__looper)
 
 	def suspend(self):
 		"""挂起dispatch进程，调用resume将恢复dispatch的执行。
@@ -178,7 +177,8 @@ class BaseCrawler(object):
 		调函数分别处理下载结果。
 		"""
 		while True:
-			if self.__dispatch_closed and self.len_send_buf() == 0 and self.finished(): break
+			if self.__dispatch_closed and len(self.__send_buffer) == 0 \
+				and self.__free_cnt == self.max_concurrent: break
 			while self.__free_cnt > 0:
 				req = None
 				try:
@@ -206,7 +206,7 @@ class BaseCrawler(object):
 				ret, active_num = self.__multi_curl.perform()
 				if ret != pycurl.E_CALL_MULTI_PERFORM: break
 			while True:
-				if self.__multi_curl.select(self.__loop_interval)==-1: continue
+				if self.__multi_curl.select(self.__loop_interval) == -1: continue
 				queued_num, ok_list, err_list = self.__multi_curl.info_read()
 				for c in ok_list:
 					self.__multi_curl.remove_handle(c)
@@ -223,6 +223,8 @@ class BaseCrawler(object):
 						self.send(req)
 					else: self.handle_error(req, errno, errmsg)
 				if queued_num == 0: break
+			if len(self.__send_buffer) == 0 and self.__free_cnt == self.max_concurrent:
+				self.resume()
 
 	def run(self):
 		"""Start Crawler"""
