@@ -11,7 +11,7 @@ def summary(data):
 	md = numpy.median(data)
 	return (min(data), q1, md, q3, max(data))
 
-def statAll(samples, fnm='stats.dat', sep='\t'):
+def stat_all(samples, fnm='stats.dat', sep='\t'):
 	hasWeight = type(samples[0]) is tuple or type(samples[0]) is list
 	if hasWeight: minX, maxX = min(samples)[0], max(samples)[0]
 	else: minX, maxX = min(samples), max(samples)
@@ -48,8 +48,7 @@ def statAll(samples, fnm='stats.dat', sep='\t'):
 	fw.write('#X, FREQ, PDF, CDF, CCDF\n')
 	for i in range(L):
 		if pdf[i]+ccdf[i+1]>1E-10:
-			#fw.write(sep.join(('%d','%d','%.10f','%.10f','%.10f\n')) % (i, pdf[i]*sumv, pdf[i], cdf[i], ccdf[i+1]))
-			fw.write('{1:d}{0}{2:d}{0}{3:.6e}{0}{4:.6e}{0}{5:.6e}\n'.format(sep, i, pdf[i]*sumv, pdf[i], cdf[i], ccdf[i+1]))
+			fw.write('{1:d}{0}{2:d}{0}{3:.6e}{0}{4:.6e}{0}{5:.6e}\n'.format(sep, i, int(pdf[i]*sumv), pdf[i], cdf[i], ccdf[i+1]))
 	fw.close()
 
 def get_pdf(samples, fnm=None):

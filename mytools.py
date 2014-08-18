@@ -51,6 +51,7 @@ class Timer:
 
 if __name__=='__main__':
 	#print(getNums('asdfsa_12,34_asdf_456aaa34.55'))
-	print(getMoney('asdf￥9.90asdfa'))
+	#print(getMoney('asdf￥9.90asdfa'))
 	#print(timestamp())
-	#print(prettytime(36810))
+	print(prettytime(60876))
+
