@@ -98,7 +98,7 @@ class FileIO:
 	def getStrs(self):
 		return self.items
 	
-	def getInt(self, i):
+	def getInt(self, i=0):
 		return int(self.items[i])
 	
 	def getInts(self):
@@ -179,7 +179,7 @@ def saveMap(tmap, fnm, anno=None, com='#'):
 	with FileWriter(fnm) as fw:
 		fw.write(com+'file: '+fnm+'\n')
 		if anno is not None: fw.write(anno.strip()+'\n')
-		for k,e in sorted(tmap.items()): 
+		for k,e in tmap.items(): 
 			if type(e) is tuple or type(e) is list: fw.write(str(k)+'\t'+'\t'.join(map(str, e))+'\n')
 			else: fw.write('%s\t%s\n' % (str(k), str(e)))
 

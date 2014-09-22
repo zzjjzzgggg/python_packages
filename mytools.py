@@ -10,9 +10,13 @@ def getNums(ss, ignore_comma=False):
 	if ignore_comma: ss=ss.replace(',', '')
 	return list(map(int, rex_num.findall(ss)))
 
+
 def getFstNum(ss, ignore_comma=False):
 	nums=getNums(ss, ignore_comma)
 	return 0 if len(nums)==0 else nums[0]
+
+def getNum(ss):
+	return getFstNum(ss, True)
 
 def getLstNum(ss, ignore_comma=False):
 	nums=getNums(ss, ignore_comma)

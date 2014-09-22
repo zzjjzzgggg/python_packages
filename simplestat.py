@@ -2,9 +2,9 @@
 #encoding: utf-8
 from iotools import FileIO, FileWriter
 from math import sqrt
-import numpy
 
 def summary(data):
+	import numpy
 	from scipy.stats import scoreatpercentile
 	q1 = scoreatpercentile(data,25)
 	q3 = scoreatpercentile(data,75)
