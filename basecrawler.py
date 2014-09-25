@@ -207,7 +207,7 @@ class BaseCrawler(object):
 				if ret != pycurl.E_CALL_MULTI_PERFORM: break
 			while True:
 				if self.__multi_curl.select(self.__loop_interval) == -1: continue
-				queued_num, ok_list, err_list = self.__multi_curl.info_read()
+				queued_num,ok_list,err_list = self.__multi_curl.info_read()
 				for c in ok_list:
 					self.__multi_curl.remove_handle(c)
 					self.__free_cnt += 1
