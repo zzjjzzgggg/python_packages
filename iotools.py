@@ -46,7 +46,7 @@ class FileWriter:
 
 class FileIO:
 	def __init__(self, fname, sep='\t', com='#', echo=True):
-		if echo: print('Loading file', fname, end=' ... ')
+		if echo: print('Loading file {} ...'.format(fname))
 		sys.stdout.flush()
 		self.sep=sep
 		self.com=com
@@ -182,6 +182,12 @@ def saveMap(tmap, fnm, anno=None, com='#'):
 		for k,e in tmap.items(): 
 			if type(e) is tuple or type(e) is list: fw.write(str(k)+'\t'+'\t'.join(map(str, e))+'\n')
 			else: fw.write('%s\t%s\n' % (str(k), str(e)))
+
+def countLines(fnm, com='#'):
+	cnt = 0
+	fio=FileIO(fnm, com=com, echo=False)
+	while fio.next(): cnt += 1
+	return cnt
 
 def loadList(fname, col=0, com='#'):
 	rst=[]
