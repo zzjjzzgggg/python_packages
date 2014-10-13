@@ -13,7 +13,8 @@ class FileReader:
 		else: self.fr=open(fname)
 	
 	def readline(self):
-		return self.fr.readline().strip()
+		l = self.fr.readline()
+		return None if l=="" else l.strip()
 	
 	def readlines(self):
 		return [l for l in self.fr]
@@ -58,20 +59,15 @@ class FileIO:
 		return self
 	
 	def __exit__(self,*exc):
-		self.close()
-		return False
-	
-	def close(self):
 		self.fr.close()
 		if self.echo: print('totally', self.ln, 'lines.')
-
+		return False
+	
 	def next(self):
 		while True:
 			self.l=self.fr.readline()
-			if not self.l:
-				self.close()
-				return False
-			if self.l[0]!=self.com:
+			if self.l is None: return False # EOF
+			if len(self.l)>0 and self.l[0]!=self.com:
 				self.ln+=1
 				self.items=self.l.strip().split(self.sep)
 				return True
