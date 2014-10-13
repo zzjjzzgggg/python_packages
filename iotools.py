@@ -181,62 +181,62 @@ def saveMap(tmap, fnm, anno=None, com='#'):
 
 def countLines(fnm, com='#'):
 	cnt = 0
-	fio=FileIO(fnm, com=com, echo=False)
-	while fio.next(): cnt += 1
+	with FileIO(fnm, com=com, echo=False) as fio:
+		while fio.next(): cnt += 1
 	return cnt
 
 def loadList(fname, col=0, com='#'):
 	rst=[]
-	fio=FileIO(fname, com=com, echo=False)
-	while fio.next(): rst.append(fio.getStr(col))
+	with FileIO(fname, com=com, echo=False) as fio:
+		while fio.next(): rst.append(fio.getStr(col))
 	return rst
 
 def loadIntList(fname, col=0):
 	rst=[]
-	fio=FileIO(fname, echo=False)
-	while fio.next(): rst.append(fio.getInt(col))
+	with FileIO(fname, echo=False) as fio:
+		while fio.next(): rst.append(fio.getInt(col))
 	return rst
 
 def loadIntFltList(fname, c1=0, c2=1):
 	rst=[]
-	fio=FileIO(fname, echo=False)
-	while fio.next(): rst.append((fio.getInt(c1),fio.getFlt(c2)))
+	with FileIO(fname, echo=False) as fio:
+		while fio.next(): rst.append((fio.getInt(c1),fio.getFlt(c2)))
 	return rst
 
 def loadFltList(fname, col=0):
 	rst=[]
-	fio=FileIO(fname, echo=False)
-	while fio.next(): rst.append(fio.getFlt(col))
+	with FileIO(fname, echo=False) as fio:
+		while fio.next(): rst.append(fio.getFlt(col))
 	return rst
 
 def loadIntMap(fnm, ckey=0, cval=1):
 	rst={}
-	fio=FileIO(fnm, echo=False)
-	while fio.next(): rst[fio.getInt(ckey)]=fio.getInt(cval)
+	with FileIO(fnm, echo=False) as fio:
+		while fio.next(): rst[fio.getInt(ckey)]=fio.getInt(cval)
 	return rst
 
 def loadStrIntMap(fnm, ckey=0, cval=1, com='#'):
 	rst={}
-	fio=FileIO(fnm, com=com, echo=False)
-	while fio.next(): rst[fio.getStr(ckey)]=fio.getInt(cval)
+	with FileIO(fnm, com=com, echo=False) as fio:
+		while fio.next(): rst[fio.getStr(ckey)]=fio.getInt(cval)
 	return rst
 
 def loadIntStrMap(fnm, ckey=0, cval=1, com='#', sep='\t'):
 	rst={}
-	fio=FileIO(fnm, com=com, sep=sep, echo=False)
-	while fio.next(): rst[fio.getInt(ckey)]=fio.getStr(cval)
+	with FileIO(fnm, com=com, sep=sep, echo=False) as fio:
+		while fio.next(): rst[fio.getInt(ckey)]=fio.getStr(cval)
 	return rst
 
 def loadIntFltMap(fnm, ckey=0, cval=1):
 	rst={}
-	fio=FileIO(fnm, echo=False)
-	while fio.next(): rst[fio.getInt(ckey)]=fio.getFlt(cval)
+	with FileIO(fnm, echo=False) as fio:
+		while fio.next(): rst[fio.getInt(ckey)]=fio.getFlt(cval)
 	return rst
 
 def loadStrFltMap(fnm, ckey=0, cval=1, com='#'):
 	rst={}
-	fio=FileIO(fnm, com=com, echo=False)
-	while fio.next(): rst[fio.getStr(ckey)]=fio.getFlt(cval)
+	with FileIO(fnm, com=com, echo=False) as fio:
+		while fio.next(): rst[fio.getStr(ckey)]=fio.getFlt(cval)
 	return rst
 
 def saveSet(slist, fnm, anno=None, com='#'):
@@ -244,57 +244,57 @@ def saveSet(slist, fnm, anno=None, com='#'):
 
 def loadSet(fnm, c=0, com='#'):
 	rst=set()
-	fio=FileIO(fnm, com=com, echo=False)
-	while fio.next(): rst.add(fio.getStr(c))
+	with FileIO(fnm, com=com, echo=False) as fio:
+		while fio.next(): rst.add(fio.getStr(c))
 	return rst
 
 def loadIntSet(fnm, c=0):
 	rst=set()
-	fio=FileIO(fnm, echo=False)
-	while fio.next(): rst.add(fio.getInt(c))
+	with FileIO(fnm, echo=False) as fio:
+		while fio.next(): rst.add(fio.getInt(c))
 	return rst
 
 def loadFltSet(fnm, c=0):
 	rst=set()
-	fio=FileIO(fnm, echo=False)
-	while fio.next(): rst.add(fio.getFlt(c))
+	with FileIO(fnm, echo=False) as fio:
+		while fio.next(): rst.add(fio.getFlt(c))
 	return rst
 
 def loadIntPrSet(fnm, rst=None):
 	if rst is None: rst=set()
-	fio=FileIO(fnm,echo=False)
-	while fio.next(): rst.add((fio.getInt(0), fio.getInt(1)))
+	with FileIO(fnm,echo=False) as fio:
+		while fio.next(): rst.add((fio.getInt(0), fio.getInt(1)))
 	return rst
 
 def loadIntPrList(fnm, rst=None):
 	if rst is None: rst=[]
-	fio=FileIO(fnm,echo=False)
-	while fio.next(): rst.append((fio.getInt(0), fio.getInt(1)))
+	with FileIO(fnm,echo=False) as fio:
+		while fio.next(): rst.append((fio.getInt(0), fio.getInt(1)))
 	return rst
 
 def loadStrPrList(fnm, rst=None):
 	if rst is None: rst=[]
-	fio=FileIO(fnm,echo=False)
-	while fio.next(): rst.append((fio.getStr(0), fio.getStr(1)))
+	with FileIO(fnm,echo=False) as fio:
+		while fio.next(): rst.append((fio.getStr(0), fio.getStr(1)))
 	return rst
 
 def loadFltPrList(fnm, rst=None):
 	if rst is None: rst=[]
-	fio=FileIO(fnm,echo=False)
-	while fio.next(): rst.append((fio.getFlt(0), fio.getFlt(1)))
+	with FileIO(fnm,echo=False) as fio:
+		while fio.next(): rst.append((fio.getFlt(0), fio.getFlt(1)))
 	return rst
 
 
 def loadIntsList(fnm, rst=None):
 	if rst is None: rst=[]
-	fio=FileIO(fnm,echo=False)
-	while fio.next(): rst.append(fio.getInts())
+	with FileIO(fnm,echo=False) as fio:
+		while fio.next(): rst.append(fio.getInts())
 	return rst
 
 def loadIntFltPrMap(fnm):
 	rst={}
-	fio=FileIO(fnm, echo=False)
-	while fio.next(): rst[fio.getInt(0)] = (fio.getFlt(1), fio.getFlt(2))
+	with FileIO(fnm, echo=False) as fio:
+		while fio.next(): rst[fio.getInt(0)] = (fio.getFlt(1), fio.getFlt(2))
 	return rst
 
 def writeFile(data, fnm):
