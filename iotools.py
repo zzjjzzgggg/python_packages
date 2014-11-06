@@ -69,7 +69,7 @@ class FileIO:
 			if self.l is None: return False # EOF
 			if len(self.l)>0 and self.l[0]!=self.com:
 				self.ln+=1
-				self.items=self.l.strip().split(self.sep)
+				self.items=self.l.split(self.sep)
 				return True
 
 	def getLine(self):
@@ -77,16 +77,6 @@ class FileIO:
 	
 	def getItemsCnt(self):
 		return len(self.items)
-
-	def get(self, i):
-		return self.items[i]
-	
-	def gets(self, types, indexes):
-		try:
-			return [tpe(self.items[idx]) for tpe,idx in zip(types, indexes)]
-		except IndexError as e:
-			print(e)
-		return None
 
 	def getStr(self, i):
 		return self.items[i]
@@ -98,13 +88,13 @@ class FileIO:
 		return int(self.items[i])
 	
 	def getInts(self):
-		return list(map(int, self.items))
+		return [int(i) for i in self.items]
 	
 	def getFlt(self, i):
 		return float(self.items[i])
 	
 	def getFlts(self):
-		return map(float, self.items)
+		return [float(i) for i in self.items]
 
 	def getShortDate(self, i):
 		return datetime.strptime(self.items[i], '%Y-%m-%d')
@@ -126,7 +116,7 @@ class FileIO:
 		return self.ln
 
 class JsonStorer:
-	def __init__(self, prefix, mx_rows=1000000, sufix='.json.gz', data_dir='data/'):
+	def __init__(self, prefix, mx_rows=1E6, sufix='.json.gz', data_dir='data/'):
 		self.fw=None
 		self.writed=0
 		self.mx_rows=mx_rows
