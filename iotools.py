@@ -78,6 +78,9 @@ class FileIO:
 	def getItemsCnt(self):
 		return len(self.items)
 
+	def gets(self, types):
+		return [fun(item) for fun,item in zip(types,self.items)]
+
 	def getStr(self, i):
 		return self.items[i]
 
