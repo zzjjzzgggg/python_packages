@@ -212,6 +212,12 @@ def loadIntMap(fnm, ckey=0, cval=1):
         while fio.next(): rst[fio.getInt(ckey)]=fio.getInt(cval)
     return rst
 
+def loadStrMap(fnm, ckey=0, cval=1):
+    rst={}
+    with FileIO(fnm, echo=False) as fio:
+        while fio.next(): rst[fio.getStr(ckey)]=fio.getStr(cval)
+    return rst
+
 def loadStrIntMap(fnm, ckey=0, cval=1, com='#'):
     rst={}
     with FileIO(fnm, com=com, echo=False) as fio:
