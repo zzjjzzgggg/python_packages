@@ -168,12 +168,12 @@ def saveStrFltV(dat, fnm):
     with FileWriter(fnm) as fw:
         for x,y in dat: fw.write('{}\t{:.6e}\n'.format(x,y))
 
-def saveMap(tmap, fnm, anno=None, com='#'):
+def saveMap(tmap, fnm, anno=None):
     with FileWriter(fnm) as fw:
-        fw.write(com+'file: '+fnm+'\n')
         if anno is not None: fw.write(anno.strip()+'\n')
         for k,e in tmap.items():
-            if type(e) is tuple or type(e) is list: fw.write(str(k)+'\t'+'\t'.join(map(str, e))+'\n')
+            if type(e) is tuple or type(e) is list:
+                fw.write(str(k)+'\t'+'\t'.join(map(str, e))+'\n')
             else: fw.write('%s\t%s\n' % (str(k), str(e)))
 
 def countLines(fnm, com='#'):

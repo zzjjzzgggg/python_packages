@@ -6,7 +6,7 @@ import re
 class URLParser:
 	def __init__(self):
 		self.rex=re.compile('<a([^><]+)>')
-	
+
 	def getURL(self, astr):
 		p1=astr.find('href="http://')
 		if p1==-1: return None
