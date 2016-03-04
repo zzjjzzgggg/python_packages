@@ -7,17 +7,16 @@ import os, sys, time, json, bz2, gzip
 class FileReader:
     def __init__(self, fname):
         ext = os.path.splitext(fname)[1]
-        if ext == '.dat': self.fr=open(fname)
-        elif ext == '.bz2':    self.fr=bz2.open(fname, 'rt')
-        elif ext =='.gz': self.fr=gzip.open(fname, 'rt')
+        if ext =='.gz': self.fr=gzip.open(fname, 'rt')
+        elif ext == '.bz2': self.fr=bz2.open(fname, 'rt')
         else: self.fr=open(fname)
 
     def readline(self):
         l = self.fr.readline()
-        return None if l=="" else l.strip()
+        return l.strip() if l else None
 
     def readlines(self):
-        return [l for l in self.fr]
+        return self.fr.readlines()
 
     def close(self):
         self.fr.close()
@@ -25,8 +24,8 @@ class FileReader:
 class FileWriter:
     def __init__(self, fname):
         ext = os.path.splitext(fname)[1]
-        if ext == '.bz2': self.f=bz2.open(fname, 'wt')
-        elif ext =='.gz': self.f=gzip.open(fname, 'wt')
+        if ext =='.gz': self.f=gzip.open(fname, 'wt')
+        elif ext == '.bz2': self.f=bz2.open(fname, 'wt')
         else: self.f=open(fname, 'w')
 
     def __enter__(self):
@@ -81,23 +80,26 @@ class FileIO:
     def gets(self, types):
         return [fun(item) for fun,item in zip(types,self.items)]
 
-    def getStr(self, i):
-        return self.items[i]
-
     def getStrs(self):
         return self.items
 
-    def getInt(self, i=0):
-        return int(self.items[i])
-
     def getInts(self):
-        return [int(i) for i in self.items]
-
-    def getFlt(self, i):
-        return float(self.items[i])
+        return self.gets(int)
 
     def getFlts(self):
-        return [float(i) for i in self.items]
+        return self.gets(float)
+
+    def get(self, i, type_fun):
+        return type_fun(self.items[i])
+
+    def getStr(self, i):
+        return self.items[i]
+
+    def getInt(self, i=0):
+        return self.get(i, int)
+
+    def getFlt(self, i):
+        return self.get(i, float)
 
     def getShortDate(self, i):
         return datetime.strptime(self.items[i], '%Y-%m-%d')
@@ -145,167 +147,142 @@ class JsonStorer:
         self.fw=None
         self.writed=0
 
-def saveList(slist, f, anno=None, com='#'):
-    if type(f)==str:
-        with FileWriter(f) as fw:
-            fw.write(com+'file: '+f+'\n'+com+'Len: %d\n'%len(slist))
-            if anno is not None: fw.write(anno.strip()+'\n')
-            for e in slist:
-                if type(e) is tuple or type(e) is list:
-                    fw.write('\t'.join(map(str, e))+'\n')
-                else: fw.write(str(e)+'\n')
-    else:
+# savers
+def saveList(slist, filename):
+    with FileWriter(filename) as fw:
         for e in slist:
-            if type(e) is tuple or type(e) is list:
-                f.write('\t'.join(map(str, e))+'\n')
-            else: f.write(str(e)+'\n')
+            if type(e) is not tuple and type(e) is not list:
+                fw.write(str(e) + '\n')
+            else:
+                fw.write('\t'.join(map(str, e)) + '\n')
 
-def saveIntFltV(dat, fnm):
-    with FileWriter(fnm) as fw:
-        for x,y in dat: fw.write('{:d}\t{:.6e}\n'.format(x,y))
+def saveXFltList(dat, filename):
+    with FileWriter(filename) as fw:
+        for x,y in dat:
+            fw.write('{}\t{:.6e}\n'.format(x, y))
 
-def saveStrFltV(dat, fnm):
-    with FileWriter(fnm) as fw:
-        for x,y in dat: fw.write('{}\t{:.6e}\n'.format(x,y))
-
-def saveMap(tmap, fnm, anno=None):
-    with FileWriter(fnm) as fw:
-        if anno is not None: fw.write(anno.strip()+'\n')
+def saveMap(tmap, filename):
+    with FileWriter(filename) as fw:
         for k,e in tmap.items():
             if type(e) is tuple or type(e) is list:
-                fw.write(str(k)+'\t'+'\t'.join(map(str, e))+'\n')
-            else: fw.write('%s\t%s\n' % (str(k), str(e)))
+                fw.write(str(k) + '\t' + '\t'.join(map(str, e)) + '\n')
+            else:
+                fw.write('{}\t{}\n'.format(k, e))
 
-def countLines(fnm, com='#'):
-    cnt = 0
-    with FileIO(fnm, com=com, echo=False) as fio:
-        while fio.next(): cnt += 1
-    return cnt
+def saveSet(slist, filename):
+    saveList(slist, filename)
 
-def loadList(fname, col=0, com='#'):
+# loader
+def loadList(fname, col=0, type_fun=str):
     rst=[]
-    with FileIO(fname, com=com, echo=False) as fio:
-        while fio.next(): rst.append(fio.getStr(col))
+    with FileIO(fname, echo=False) as fio:
+        while fio.next():
+            rst.append(fio.get(col, type_fun))
     return rst
 
 def loadIntList(fname, col=0):
-    rst=[]
-    with FileIO(fname, echo=False) as fio:
-        while fio.next(): rst.append(fio.getInt(col))
-    return rst
+    return loadList(col, int)
+
+def loadFltList(fname, col=0):
+    return loadList(col, float)
 
 def loadIntFltList(fname, c1=0, c2=1):
     rst=[]
     with FileIO(fname, echo=False) as fio:
-        while fio.next(): rst.append((fio.getInt(c1),fio.getFlt(c2)))
+        while fio.next():
+            rst.append((fio.getInt(c1),fio.getFlt(c2)))
     return rst
 
-def loadFltList(fname, col=0):
-    rst=[]
-    with FileIO(fname, echo=False) as fio:
-        while fio.next(): rst.append(fio.getFlt(col))
-    return rst
-
-def loadIntMap(fnm, ckey=0, cval=1):
+def loadMap(filename, ckey=0, cval=1, key_type=str, val_type=str):
     rst={}
-    with FileIO(fnm, echo=False) as fio:
-        while fio.next(): rst[fio.getInt(ckey)]=fio.getInt(cval)
+    with FileIO(filename, echo=False) as fio:
+        while fio.next():
+            rst[fio.get(ckey, key_type)] = fio.get(cval, val_type)
     return rst
 
-def loadStrMap(fnm, ckey=0, cval=1):
-    rst={}
-    with FileIO(fnm, echo=False) as fio:
-        while fio.next(): rst[fio.getStr(ckey)]=fio.getStr(cval)
-    return rst
+def loadIntMap(filename, ckey=0, cval=1):
+    return loadMap(filename, ckey, cval, int, int)
 
-def loadStrIntMap(fnm, ckey=0, cval=1, com='#'):
-    rst={}
-    with FileIO(fnm, com=com, echo=False) as fio:
-        while fio.next(): rst[fio.getStr(ckey)]=fio.getInt(cval)
-    return rst
+def loadStrIntMap(filename, ckey=0, cval=1):
+    return loadMap(filename, ckey, cval, str, int)
 
-def loadIntStrMap(fnm, ckey=0, cval=1, com='#', sep='\t'):
-    rst={}
-    with FileIO(fnm, com=com, sep=sep, echo=False) as fio:
-        while fio.next(): rst[fio.getInt(ckey)]=fio.getStr(cval)
-    return rst
+def loadIntStrMap(filename, ckey=0, cval=1):
+    return loadMap(filename, ckey, cval, int, str)
 
-def loadIntFltMap(fnm, ckey=0, cval=1):
-    rst={}
-    with FileIO(fnm, echo=False) as fio:
-        while fio.next(): rst[fio.getInt(ckey)]=fio.getFlt(cval)
-    return rst
+def loadIntFltMap(filename, ckey=0, cval=1):
+    return loadMap(filename, ckey, cval, int, float)
 
-def loadStrFltMap(fnm, ckey=0, cval=1, com='#'):
-    rst={}
-    with FileIO(fnm, com=com, echo=False) as fio:
-        while fio.next(): rst[fio.getStr(ckey)]=fio.getFlt(cval)
-    return rst
+def loadStrFltMap(filename, ckey=0, cval=1):
+    return loadMap(filename, ckey, cval, str, float)
 
-def saveSet(slist, fnm, anno=None, com='#'):
-    saveList(slist, fnm, anno=None, com='#')
-
-def loadSet(fnm, c=0, com='#'):
+def loadSet(filename, c=0, type_fun=str):
     rst=set()
-    with FileIO(fnm, com=com, echo=False) as fio:
-        while fio.next(): rst.add(fio.getStr(c))
+    with FileIO(filename, com=com, echo=False) as fio:
+        while fio.next(): rst.add(fio.get(c, str))
     return rst
 
-def loadIntSet(fnm, c=0):
+def loadIntSet(filename, c=0):
+    return loadSet(filename, c, int)
+
+def loadFltSet(filename, c=0):
+    return loadSet(filename, c, float)
+
+def loadMultiColSet(filename, cols, type_fun=str):
     rst=set()
-    with FileIO(fnm, echo=False) as fio:
-        while fio.next(): rst.add(fio.getInt(c))
+    with FileIO(filename, echo=False) as fio:
+        while fio.next():
+            for c in cols:
+                rst.add(fio.get(c, type_fun))
     return rst
 
-def loadFltSet(fnm, c=0):
-    rst=set()
-    with FileIO(fnm, echo=False) as fio:
-        while fio.next(): rst.add(fio.getFlt(c))
-    return rst
 
-def loadIntPrSet(fnm, rst=None):
+def loadIntPrSet(filename, rst=None):
     if rst is None: rst=set()
-    with FileIO(fnm,echo=False) as fio:
+    with FileIO(filename,echo=False) as fio:
         while fio.next(): rst.add((fio.getInt(0), fio.getInt(1)))
     return rst
 
-def loadIntPrList(fnm, rst=None):
+def loadIntPrList(filename, rst=None):
     if rst is None: rst=[]
-    with FileIO(fnm,echo=False) as fio:
+    with FileIO(filename,echo=False) as fio:
         while fio.next(): rst.append((fio.getInt(0), fio.getInt(1)))
     return rst
 
-def loadStrPrList(fnm, rst=None):
+def loadStrPrList(filename, rst=None):
     if rst is None: rst=[]
-    with FileIO(fnm,echo=False) as fio:
+    with FileIO(filename,echo=False) as fio:
         while fio.next(): rst.append((fio.getStr(0), fio.getStr(1)))
     return rst
 
-def loadFltPrList(fnm, rst=None):
+def loadFltPrList(filename, rst=None):
     if rst is None: rst=[]
-    with FileIO(fnm,echo=False) as fio:
+    with FileIO(filename,echo=False) as fio:
         while fio.next(): rst.append((fio.getFlt(0), fio.getFlt(1)))
     return rst
 
 
-def loadIntsList(fnm, rst=None):
+def loadIntsList(filename, rst=None):
     if rst is None: rst=[]
-    with FileIO(fnm,echo=False) as fio:
+    with FileIO(filename,echo=False) as fio:
         while fio.next(): rst.append(fio.getInts())
     return rst
 
-def loadIntFltPrMap(fnm):
+def loadIntFltPrMap(filename):
     rst={}
-    with FileIO(fnm, echo=False) as fio:
+    with FileIO(filename, echo=False) as fio:
         while fio.next(): rst[fio.getInt(0)] = (fio.getFlt(1), fio.getFlt(2))
     return rst
 
-def writeFile(data, fnm):
-    if data is None or len(data)==0: return
-    with FileWriter(fnm) as fw: fw.write(data)
 
-def readFile(fnm):
-    fr = FileReader(fnm)
+
+
+
+def writeFile(data, filename):
+    if data is None or len(data)==0: return
+    with FileWriter(filename) as fw: fw.write(data)
+
+def readFile(filename):
+    fr = FileReader(filename)
     lines = fr.readlines()
     fr.close()
     return ''.join(lines)
