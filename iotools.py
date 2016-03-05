@@ -181,10 +181,10 @@ def loadList(fname, col=0, type_fun=str):
     return rst
 
 def loadIntList(fname, col=0):
-    return loadList(col, int)
+    return loadList(fname, col, int)
 
 def loadFltList(fname, col=0):
-    return loadList(col, float)
+    return loadList(fname, col, float)
 
 def loadIntFltList(fname, c1=0, c2=1):
     rst=[]

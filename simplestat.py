@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 #encoding: utf-8
 from iotools import FileIO, FileWriter
-from math import sqrt
+import math
 
 def summary(data):
     import numpy
@@ -44,7 +44,7 @@ def stat_all(samples, fnm='stats.dat', sep='\t'):
     fw.write('#max X: {:d}\n'.format(maxX))
     fw.write('#total: {:.2f}\n'.format(sumv))
     fw.write('#expectation: {:.2f}\n'.format(exp))
-    fw.write('#variance: {:.6f}\n'.format(sqrt(var-exp*exp)))
+    fw.write('#variance: {:.6f}\n'.format(math.sqrt(var-exp*exp)))
     fw.write('#X, FREQ, PDF, CDF, CCDF\n')
     for i in range(L):
         if pdf[i]+ccdf[i+1]>1E-10:
@@ -59,6 +59,24 @@ def get_pdf(samples, fnm=None):
             dist[s]+=1
         except KeyError:
             dist[s]=1
+    pdf = [(k,v/N) for k,v in dist.items()]
+    pdf.sort(key=lambda e: e[0])
+    if fnm is not None:
+        with open(fnm, 'w') as fw:
+            for k,v in pdf: fw.write('{:d}\t{:.6e}\n'.format(k,v))
+    return pdf
+
+
+def get_pdf_flt(samples, fnm=None):
+    ''' elements in samples are positive floats '''
+    N = len(samples)
+    dist = {}
+    for s in samples:
+        key = int(math.floor(s))
+        try:
+            dist[key] += 1
+        except KeyError:
+            dist[key]=1
     pdf = [(k,v/N) for k,v in dist.items()]
     pdf.sort(key=lambda e: e[0])
     if fnm is not None:
