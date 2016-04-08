@@ -88,17 +88,16 @@ def get_ccdf(pdf, fnm=None, sep='\t'):
     ''' Input: pdf is a list of tuple [(x, px), ...].
             x must be an integer, and x>=0.
             The pdf does not need to be normlized.
-        Return: a CCDF list, [P(X>-1), P(X>0), ..., P(X>max_X-1)]
+        Return: a CCDF list, [(-1,P(X>-1)), (0,P(X>0)), ...]
     '''
-    L = max(pdf, key=lambda x: x[0])[0] + 1
-    ccdf =[0]*L
-    for x,y in pdf: ccdf[x]=y
-    for x in range(L-2, -1, -1): ccdf[x]+=ccdf[x+1]
-    for x in range(L-1, -1, -1): ccdf[x]/=ccdf[0]
+    ccdf = [y for x,y in pdf]
+    for i in range(len(ccdf)-2,-1,-1): ccdf[i] += ccdf[i+1]
+    print(ccdf)
+    for i in range(len(ccdf)-1,-1,-1): ccdf[i] /= ccdf[0]
     if fnm is not None:
         fw=FileWriter(fnm)
-        for i in range(L):
-            fw.write('{1:d}{0}{2:.6e}\n'.format(sep, i-1, ccdf[i]))
+        for e,y in zip(pdf,ccdf):
+            fw.write('{1:d}{0}{2:.6e}\n'.format(sep, e[0]-1, y))
         fw.close()
     return ccdf
 
@@ -118,4 +117,4 @@ def get_cdf(pdf):
 if __name__=='__main__':
     #statAll([1,1,2,3,4,6])
     pdf = [(0,3), (1,2), (5,1)]
-    print(get_ccdf(pdf, 'test'))
+    print(get_ccdf(pdf, 'test2'))
