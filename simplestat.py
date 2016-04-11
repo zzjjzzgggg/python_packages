@@ -52,20 +52,17 @@ def stat_all(samples, fnm='stats.dat', sep='\t'):
     fw.close()
 
 def get_pdf(samples, fnm=None):
-    N = len(samples)
+    num_samples = len(samples)
     dist = {}
     for s in samples:
-        try:
-            dist[s]+=1
-        except KeyError:
-            dist[s]=1
-    pdf = [(k,v/N) for k,v in dist.items()]
+        if s in dist: dist[s] += 1
+        else: dist[s] = 1
+    pdf = [(key,val/num_samples) for key,val in dist.items()]
     pdf.sort(key=lambda e: e[0])
     if fnm is not None:
         with open(fnm, 'w') as fw:
             for k,v in pdf: fw.write('{:d}\t{:.6e}\n'.format(k,v))
     return pdf
-
 
 def get_pdf_flt(samples, fnm=None):
     ''' elements in samples are positive floats '''
@@ -105,16 +102,26 @@ def get_ccdf_from_samples(sampels, fnm):
     pdf = get_pdf(samples)
     get_ccdf(pdf, fnm)
 
-# pdf is a list of tuple [(x, px)...]
-def get_cdf(pdf):
-    L=max(pdf, key=lambda x: x[0])[0]+1
-    cdf=[0]*L
-    for x,p in pdf: cdf[x]=p
-    for i in range(1, L): cdf[i]+=cdf[i-1]
-    for i in range(L): cdf[i]/=cdf[-1]
+def get_cdf(pdf, fnm=None, sep="\t"):
+    ''' pdf is a list [(x, px)...], and return list [P(X<=x)]. '''
+    cdf = [p for x,p in pdf]
+    for i in range(1, len(cdf)): cdf[i] += cdf[i-1]
+    if fnm is not None:
+        fw=FileWriter(fnm)
+        for e,y in zip(pdf,cdf):
+            fw.write('{1:d}{0}{2:.6e}\n'.format(sep, e[0], y))
+        fw.close()
     return cdf
+
+def get_frequency(keys):
+    '''state the frequency of keys'''
+    freq = {}
+    for key in keys:
+        if key in freq: freq[key] += 1
+        else: freq[key] = 1
+    return [v for k,v in freq.items()]
 
 if __name__=='__main__':
     #statAll([1,1,2,3,4,6])
-    pdf = [(0,3), (1,2), (5,1)]
-    print(get_ccdf(pdf, 'test2'))
+    pdf = [(0,.3), (1,.2), (5,.5)]
+    print(get_cdf(pdf, 'test'))
