@@ -1,7 +1,9 @@
 #! /usr/bin/env python
 #encoding: utf-8
-from iotools import FileIO, FileWriter
+
 import math
+from collections import Counter
+from iotools import FileIO, FileWriter
 
 def summary(data):
     import numpy
@@ -53,11 +55,9 @@ def stat_all(samples, fnm='stats.dat', sep='\t'):
 
 def get_pdf(samples, fnm=None):
     num_samples = len(samples)
-    dist = {}
-    for s in samples:
-        if s in dist: dist[s] += 1
-        else: dist[s] = 1
-    pdf = [(key,val/num_samples) for key,val in dist.items()]
+    cnt = Counter()
+    for s in samples: cnt[s] += 1
+    pdf = [(key,val/num_samples) for key,val in cnt.items()]
     pdf.sort(key=lambda e: e[0])
     if fnm is not None:
         with open(fnm, 'w') as fw:
@@ -67,14 +67,11 @@ def get_pdf(samples, fnm=None):
 def get_pdf_flt(samples, fnm=None):
     ''' elements in samples are positive floats '''
     N = len(samples)
-    dist = {}
+    cnt = Counter()
     for s in samples:
         key = int(math.floor(s))
-        try:
-            dist[key] += 1
-        except KeyError:
-            dist[key]=1
-    pdf = [(k,v/N) for k,v in dist.items()]
+        cnt[key] += 1
+    pdf = [(k,v/N) for k,v in cnt.items()]
     pdf.sort(key=lambda e: e[0])
     if fnm is not None:
         with open(fnm, 'w') as fw:
@@ -115,11 +112,9 @@ def get_cdf(pdf, fnm=None, sep="\t"):
 
 def get_frequency(keys):
     '''state the frequency of keys'''
-    freq = {}
-    for key in keys:
-        if key in freq: freq[key] += 1
-        else: freq[key] = 1
-    return [v for k,v in freq.items()]
+    freq = Counter()
+    for key in keys: freq[key] += 1
+    return tuple(freq.values())
 
 if __name__=='__main__':
     #statAll([1,1,2,3,4,6])

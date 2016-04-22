@@ -84,10 +84,10 @@ class FileIO:
         return self.items
 
     def getInts(self):
-        return self.gets(int)
+        return [int(item) for item in self.items]
 
     def getFlts(self):
-        return self.gets(float)
+        return [float(item) for item in self.items]
 
     def get(self, i, type_fun):
         return type_fun(self.items[i])
@@ -217,7 +217,7 @@ def loadStrFltMap(filename, ckey=0, cval=1):
 
 def loadSet(filename, c=0, type_fun=str):
     rst=set()
-    with FileIO(filename, com=com, echo=False) as fio:
+    with FileIO(filename, com=c, echo=False) as fio:
         while fio.next(): rst.add(fio.get(c, str))
     return rst
 
