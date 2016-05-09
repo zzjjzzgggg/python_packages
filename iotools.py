@@ -147,27 +147,25 @@ class JsonStorer:
         self.fw=None
         self.writed=0
 
-# savers
-def saveList(slist, filename):
-    with FileWriter(filename) as fw:
-        for e in slist:
-            if type(e) is not tuple and type(e) is not list:
-                fw.write(str(e) + '\n')
-            else:
-                fw.write('\t'.join(map(str, e)) + '\n')
+def get_format(e):
+    if type(e) is tuple or type(e) is list:
+        tmp = ['{0[%d]:.6e}'%i if type(val) is float else '{0[%d]}'%i for i,val in enumerate(e)]
+        fmt ='\t'.join(tmp)
+    else:
+        fmt = '{:.6e}' if type(e) is float else '{}'
+    return fmt + "\n"
 
-def saveXFltList(dat, filename):
+# savers
+def saveList(data, filename):
     with FileWriter(filename) as fw:
-        for x,y in dat:
-            fw.write('{}\t{:.6e}\n'.format(x, y))
+        it = iter(data)
+        e = next(it)
+        fmt = get_format(e)
+        fw.write(fmt.format(e))
+        for e in it: fw.write(fmt.format(e))
 
 def saveMap(tmap, filename):
-    with FileWriter(filename) as fw:
-        for k,e in tmap.items():
-            if type(e) is tuple or type(e) is list:
-                fw.write(str(k) + '\t' + '\t'.join(map(str, e)) + '\n')
-            else:
-                fw.write('{}\t{}\n'.format(k, e))
+    saveList(tmap.items(), filename)
 
 def saveSet(slist, filename):
     saveList(slist, filename)
@@ -186,11 +184,11 @@ def loadIntList(fname, col=0):
 def loadFltList(fname, col=0):
     return loadList(fname, col, float)
 
-def loadIntFltList(fname, c1=0, c2=1):
+def loadTupleList(fname, funs):
     rst=[]
     with FileIO(fname, echo=False) as fio:
         while fio.next():
-            rst.append((fio.getInt(c1),fio.getFlt(c2)))
+            rst.append(tuple([fio.get(i, f) for i, f in enumerate(funs)]))
     return rst
 
 def loadMap(filename, ckey=0, cval=1, key_type=str, val_type=str):
@@ -286,3 +284,8 @@ def readFile(filename):
     lines = fr.readlines()
     fr.close()
     return ''.join(lines)
+
+
+
+if __name__ == '__main__':
+    print(get_format([1, 2]))

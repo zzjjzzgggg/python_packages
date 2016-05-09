@@ -58,7 +58,7 @@ def get_pdf(samples, fnm=None):
     cnt = Counter()
     for s in samples: cnt[s] += 1
     pdf = [(key,val/num_samples) for key,val in cnt.items()]
-    pdf.sort(key=lambda e: e[0])
+    pdf.sort()
     if fnm is not None:
         with open(fnm, 'w') as fw:
             for k,v in pdf: fw.write('{:d}\t{:.6e}\n'.format(k,v))
@@ -78,26 +78,24 @@ def get_pdf_flt(samples, fnm=None):
             for k,v in pdf: fw.write('{:d}\t{:.6e}\n'.format(k,v))
     return pdf
 
-def get_ccdf(pdf, fnm=None, sep='\t'):
-    ''' Input: pdf is a list of tuple [(x, px), ...].
+def get_ccdf(pdf_or_freq, fnm=None):
+    ''' Input: pdf_or_freq is a list of tuple [(x, y), ...].
             x must be an integer, and x>=0.
-            The pdf does not need to be normlized.
+            The pdf does not need to be normlized (or frequency).
         Return: a CCDF list, [(-1,P(X>-1)), (0,P(X>0)), ...]
     '''
-    ccdf = [y for x,y in pdf]
+    ccdf = [y for x,y in pdf_or_freq]
     for i in range(len(ccdf)-2,-1,-1): ccdf[i] += ccdf[i+1]
-    print(ccdf)
-    for i in range(len(ccdf)-1,-1,-1): ccdf[i] /= ccdf[0]
     if fnm is not None:
         fw=FileWriter(fnm)
-        for e,y in zip(pdf,ccdf):
-            fw.write('{1:d}{0}{2:.6e}\n'.format(sep, e[0]-1, y))
+        for e,y in zip(pdf_or_freq, ccdf):
+            fw.write('{}\t{}\t{:.6e}\n'.format(e[0]-1, y, y/ccdf[0]))
         fw.close()
     return ccdf
 
-def get_ccdf_from_samples(sampels, fnm):
-    pdf = get_pdf(samples)
-    get_ccdf(pdf, fnm)
+def get_ccdf_from_samples(samples, fnm):
+    freq = get_frequency(samples)
+    get_ccdf(freq, fnm)
 
 def get_cdf(pdf, fnm=None, sep="\t"):
     ''' pdf is a list [(x, px)...], and return list [P(X<=x)]. '''
@@ -114,7 +112,7 @@ def get_frequency(keys):
     '''state the frequency of keys'''
     freq = Counter()
     for key in keys: freq[key] += 1
-    return tuple(freq.values())
+    return sorted(freq.items())
 
 if __name__=='__main__':
     #statAll([1,1,2,3,4,6])
