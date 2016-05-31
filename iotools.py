@@ -4,22 +4,15 @@
 from datetime import datetime
 import os, sys, time, json, bz2, gzip
 
-class FileReader:
-    def __init__(self, fname):
-        ext = os.path.splitext(fname)[1]
-        if ext =='.gz': self.fr=gzip.open(fname, 'rt')
-        elif ext == '.bz2': self.fr=bz2.open(fname, 'rt')
-        else: self.fr=open(fname)
-
-    def readline(self):
-        l = self.fr.readline()
-        return l.strip() if l else None
-
-    def readlines(self):
-        return self.fr.readlines()
-
-    def close(self):
-        self.fr.close()
+def get_file_reader(fname):
+    ext = os.path.splitext(fname)[1]
+    if ext =='.gz':
+        fr=gzip.open(fname, 'rt')
+    elif ext == '.bz2':
+        fr=bz2.open(fname, 'rt')
+    else:
+        fr=open(fname)
+    return fr
 
 class FileWriter:
     def __init__(self, fname):
@@ -48,11 +41,9 @@ class FileIO:
     def __init__(self, fname, sep='\t', com='#', echo=True):
         if echo: print('Loading file {} ...'.format(fname))
         sys.stdout.flush()
-        self.sep=sep
-        self.com=com
+        self.sep, self.com, self.echo = sep, com, echo
+        self.fr = get_file_reader(fname)
         self.ln=0
-        self.fr=FileReader(fname)
-        self.echo=echo
 
     def __enter__(self):
         return self
@@ -65,11 +56,11 @@ class FileIO:
     def next(self):
         while True:
             self.l=self.fr.readline()
-            if self.l is None: return False # EOF
-            if len(self.l)>0 and self.l[0]!=self.com:
-                self.ln+=1
-                self.items=self.l.split(self.sep)
+            if self.l and self.l[0] != self.com:
+                self.ln += 1
+                self.items = self.l.rstrip().split(self.sep)
                 return True
+            if not self.l: return False # empty line = EOF
 
     def getLine(self):
         return self.l
@@ -280,11 +271,10 @@ def writeFile(data, filename):
     with FileWriter(filename) as fw: fw.write(data)
 
 def readFile(filename):
-    fr = FileReader(filename)
+    fr = get_file_reader(filename)
     lines = fr.readlines()
     fr.close()
     return ''.join(lines)
-
 
 
 if __name__ == '__main__':
