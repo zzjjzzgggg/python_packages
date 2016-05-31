@@ -89,7 +89,7 @@ class FileIO:
     def getFlts(self):
         return [float(item) for item in self.items]
 
-    def get(self, i, type_fun):
+    def get(self, i, type_fun=str):
         return type_fun(self.items[i])
 
     def getStr(self, i):
