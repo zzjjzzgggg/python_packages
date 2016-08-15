@@ -50,7 +50,8 @@ def stat_all(samples, fnm='stats.dat', sep='\t'):
     fw.write('#X, FREQ, PDF, CDF, CCDF\n')
     for i in range(L):
         if pdf[i]+ccdf[i+1]>1E-10:
-            fw.write('{1:d}{0}{2:d}{0}{3:.6e}{0}{4:.6e}{0}{5:.6e}\n'.format(sep, i, int(pdf[i]*sumv), pdf[i], cdf[i], ccdf[i+1]))
+            fw.write('{1:d}{0}{2:d}{0}{3:.6e}{0}{4:.6e}{0}{5:.6e}\n'\
+                     .format(sep, i, int(pdf[i]*sumv), pdf[i], cdf[i], ccdf[i+1]))
     fw.close()
 
 def get_pdf(samples, fnm=None):
@@ -64,19 +65,20 @@ def get_pdf(samples, fnm=None):
             for k,v in pdf: fw.write('{:d}\t{:.6e}\n'.format(k,v))
     return pdf
 
-def get_pdf_flt(samples, fnm=None):
+def get_histogram(samples, window_size, fnm=None):
     ''' elements in samples are positive floats '''
     N = len(samples)
     cnt = Counter()
     for s in samples:
-        key = int(math.floor(s))
+        key = math.floor(s/window_size) * window_size
         cnt[key] += 1
-    pdf = [(k,v/N) for k,v in cnt.items()]
-    pdf.sort(key=lambda e: e[0])
+    hist = [(k, v/N) for k, v in cnt.items()]
+    hist.sort()
     if fnm is not None:
         with open(fnm, 'w') as fw:
-            for k,v in pdf: fw.write('{:d}\t{:.6e}\n'.format(k,v))
-    return pdf
+            for k, v in hist:
+                fw.write('{:g}\t{:.6e}\n'.format(k,v))
+    return hist
 
 def get_ccdf(pdf_or_freq, fnm=None):
     ''' Input: pdf_or_freq is a list of tuple [(x, y), ...].
