@@ -1,8 +1,14 @@
-#! /usr/bin/env python
-#encoding: utf-8
+#! /usr/bin/env python3
+# -*- coding: utf-8 -*-
 
+import bz2
+import gzip
+import json
+import os
+import sys
+import time
 from datetime import datetime
-import os, sys, time, json, bz2, gzip
+
 
 def get_file_reader(fname):
     ext = os.path.splitext(fname)[1]
@@ -11,7 +17,7 @@ def get_file_reader(fname):
     elif ext == '.bz2':
         fr=bz2.open(fname, 'rt')
     else:
-        fr=open(fname)
+        fr=open(fname, errors='ignore')
     return fr
 
 class FileWriter:

@@ -3,7 +3,9 @@
 
 import math
 from collections import Counter
+
 from iotools import FileIO, FileWriter
+
 
 def summary(data):
     import numpy
@@ -13,7 +15,7 @@ def summary(data):
     md = numpy.median(data)
     return (min(data), q1, md, q3, max(data))
 
-def stat_all(samples, fnm='stats.dat', sep='\t'):
+def stat_all(samples, fnm='stats.dat'):
     hasWeight = type(samples[0]) is tuple or type(samples[0]) is list
     if hasWeight: minX, maxX = min(samples)[0], max(samples)[0]
     else: minX, maxX = min(samples), max(samples)
@@ -46,12 +48,14 @@ def stat_all(samples, fnm='stats.dat', sep='\t'):
     fw.write('#max X: {:d}\n'.format(maxX))
     fw.write('#total: {:.2f}\n'.format(sumv))
     fw.write('#expectation: {:.2f}\n'.format(exp))
-    fw.write('#variance: {:.6f}\n'.format(math.sqrt(var-exp*exp)))
+    fw.write('#variance: {:.6f}\n'
+             .format(math.sqrt(var-exp*exp)))
     fw.write('#X, FREQ, PDF, CDF, CCDF\n')
     for i in range(L):
         if pdf[i]+ccdf[i+1]>1E-10:
-            fw.write('{1:d}{0}{2:d}{0}{3:.6e}{0}{4:.6e}{0}{5:.6e}\n'\
-                     .format(sep, i, int(pdf[i]*sumv), pdf[i], cdf[i], ccdf[i+1]))
+            fw.write('{:d}\t{:d}\t{:.6e}\t{:.6e}\t{:.6e}\n'
+                     .format(i, int(pdf[i]*sumv), pdf[i],
+                             cdf[i], ccdf[i+1]))
     fw.close()
 
 def get_pdf(samples, fnm=None):
@@ -62,7 +66,8 @@ def get_pdf(samples, fnm=None):
     pdf.sort()
     if fnm is not None:
         with open(fnm, 'w') as fw:
-            for k,v in pdf: fw.write('{:d}\t{:.6e}\n'.format(k,v))
+            for k,v in pdf:
+                fw.write('{:d}\t{:.6e}\n'.format(k,v))
     return pdf
 
 def get_histogram(samples, window_size, fnm=None):
@@ -81,17 +86,20 @@ def get_histogram(samples, window_size, fnm=None):
     return hist
 
 def get_ccdf(pdf_or_freq, fnm=None):
-    ''' Input: pdf_or_freq is a list of tuple [(x, y), ...].
-            x must be an integer, and x>=0.
-            The pdf does not need to be normlized (or frequency).
-        Return: a CCDF list, [(-1,P(X>-1)), (0,P(X>0)), ...]
+    '''
+    `pdf_or_freq' is a list of tuples [(x, y), ...], where
+    x>=0 is an integer, and y is the amount of probability
+    mass for x. Here y does not need to be normlized, and it
+    could be the frequency of x.
+    Return a CCDF list: [(-1,P(X>-1)), (0,P(X>0)), ...]
     '''
     ccdf = [y for x,y in pdf_or_freq]
     for i in range(len(ccdf)-2,-1,-1): ccdf[i] += ccdf[i+1]
     if fnm is not None:
         fw=FileWriter(fnm)
         for e,y in zip(pdf_or_freq, ccdf):
-            fw.write('{}\t{}\t{:.6e}\n'.format(e[0]-1, y, y/ccdf[0]))
+            fw.write('{}\t{}\t{:.6e}\n'
+                     .format(e[0]-1, y, y/ccdf[0]))
         fw.close()
     return ccdf
 
@@ -100,7 +108,9 @@ def get_ccdf_from_samples(samples, fnm):
     get_ccdf(freq, fnm)
 
 def get_cdf(pdf, fnm=None, sep="\t"):
-    ''' pdf is a list [(x, px)...], and return list [P(X<=x)]. '''
+    '''
+    pdf is a list [(x, px)...], and return list [P(X<=x)].
+    '''
     cdf = [p for x,p in pdf]
     for i in range(1, len(cdf)): cdf[i] += cdf[i-1]
     if fnm is not None:

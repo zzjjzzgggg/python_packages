@@ -5,13 +5,13 @@
 A crawler framework using pycurl.
 """
 
-import signal
-signal.signal(signal.SIGPIPE, signal.SIG_IGN)
-
-import time
 import io
+import signal
+import time
+
 import pycurl
 
+signal.signal(signal.SIGPIPE, signal.SIG_IGN)
 pycurl.global_init(pycurl.GLOBAL_ALL)
 
 class BaseRequest(object):
