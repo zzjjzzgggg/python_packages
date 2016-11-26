@@ -1,8 +1,7 @@
 #! /usr/bin/env python
 #encoding: utf-8
 
-import re
-import time
+import re, time
 
 rex_num = re.compile('\d+')
 rex_money = re.compile('[$￥\d\.]+')
