@@ -3,11 +3,11 @@
 
 import re, time
 
-rex_num = re.compile('\d+')
-rex_money = re.compile('[$￥\d\.]+')
+REX_NUM = re.compile('\d+')
+REX_MONEY = re.compile('[$￥\d\.]+')
 def getNums(ss, ignore_comma=False):
     if ignore_comma: ss=ss.replace(',', '')
-    return list(map(int, rex_num.findall(ss)))
+    return list(map(int, REX_NUM.findall(ss)))
 
 def getFstNum(ss, ignore_comma=False):
     nums=getNums(ss, ignore_comma)
