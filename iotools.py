@@ -87,11 +87,17 @@ class FileIO:
     def getStrs(self):
         return self.items
 
-    def getInts(self):
-        return [int(item) for item in self.items]
+    def getInts(self, idx=None):
+        if idx is None:
+            return [int(item) for item in self.items]
+        else:
+            return [int(self.items[i]) for i in idx]
 
-    def getFlts(self):
-        return [float(item) for item in self.items]
+    def getFlts(self, idx=None):
+        if idx is None:
+            return [float(item) for item in self.items]
+        else:
+            return [float(self.items[i]) for i in idx]
 
     def get(self, i, fun=str):
         return fun(self.items[i])
