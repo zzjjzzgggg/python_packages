@@ -170,8 +170,7 @@ class JsonStorer:
 
 def get_format(e):
     if isinstance(e, tuple) or isinstance(e, list):
-        tmp = ['{0[%d]:.6e}' % i
-               if isinstance(val, float)
+        tmp = ['{0[%d]:.6e}' % i if isinstance(val, float)
                else '{0[%d]}' % i for i, val in enumerate(e)]
         fmt = '\t'.join(tmp)
     else:
@@ -179,21 +178,20 @@ def get_format(e):
     return fmt + "\n"
 
 # savers
-def saveList(data, filename):
+def saveList(data, filename, fmt=None):
     with FileWriter(filename) as fw:
         it = iter(data)
         e = next(it)
-        fmt = get_format(e)
+        if fmt is None: fmt = get_format(e)
         fw.write(fmt.format(e))
-        for e in it:
-            fw.write(fmt.format(e))
+        for e in it: fw.write(fmt.format(e))
     print("saved to", filename)
 
-def saveMap(tmap, filename):
-    saveList(tmap.items(), filename)
+def saveMap(tmap, filename, fmt=None):
+    saveList(tmap.items(), filename, fmt)
 
-def saveSet(slist, filename):
-    saveList(slist, filename)
+def saveSet(slist, filename, fmt=None):
+    saveList(slist, filename, fmt)
 
 
 # loader
