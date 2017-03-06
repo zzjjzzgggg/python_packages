@@ -178,20 +178,20 @@ def get_format(e):
     return fmt + "\n"
 
 # savers
-def saveList(data, filename, fmt=None):
+def saveList(data, filename):
     with FileWriter(filename) as fw:
         it = iter(data)
         e = next(it)
-        if fmt is None: fmt = get_format(e)
+        fmt = get_format(e)
         fw.write(fmt.format(e))
         for e in it: fw.write(fmt.format(e))
     print("saved to", filename)
 
-def saveMap(tmap, filename, fmt=None):
-    saveList(tmap.items(), filename, fmt)
+def saveMap(tmap, filename):
+    saveList(tmap.items(), filename)
 
-def saveSet(slist, filename, fmt=None):
-    saveList(slist, filename, fmt)
+def saveSet(slist, filename):
+    saveList(slist, filename)
 
 
 # loader
