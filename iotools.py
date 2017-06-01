@@ -171,11 +171,11 @@ class JsonStorer:
 
 def get_format(e):
     if isinstance(e, tuple) or isinstance(e, list):
-        tmp = ['{0[%d]:.4e}' % i if isinstance(val, float)
+        tmp = ['{0[%d]:.6e}' % i if isinstance(val, float)
                else '{0[%d]}' % i for i, val in enumerate(e)]
         fmt = '\t'.join(tmp)
     else:
-        fmt = '{:.4e}' if isinstance(e, float) else '{}'
+        fmt = '{:.6e}' if isinstance(e, float) else '{}'
     return fmt + "\n"
 
 # savers
@@ -213,9 +213,11 @@ def loadTupleList(fname, funs):
     rst = []
     with FileIO(fname) as fio:
         while fio.next():
-            rst.append(tuple([fio.get(i, f)
-                              for i, f in enumerate(funs)]))
+            rst.append(tuple([fio.get(i, f) for i, f in enumerate(funs)]))
     return rst
+
+def loadIntFltList(fname):
+    return loadTupleList(fname, (int, float))
 
 def loadMap(filename, ckey=0, cval=1, k_type=str, v_type=str):
     rst = {}
