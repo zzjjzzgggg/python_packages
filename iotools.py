@@ -7,14 +7,16 @@ import json
 import os
 import sys
 import time
+import array
+import struct
 from datetime import datetime
 
 
-def get_file_reader(fname):
+def get_file_reader(fname, flag='rt'):
     ext = os.path.splitext(fname)[1]
-    if ext == '.gz': return gzip.open(fname, 'rt')
-    elif ext == '.bz2': return bz2.open(fname, 'rt')
-    return open(fname, errors='ignore')
+    if ext == '.gz': return gzip.open(fname, flag)
+    elif ext == '.bz2': return bz2.open(fname, flag)
+    return open(fname, flag)
 
 
 class FileWriter:
@@ -320,3 +322,11 @@ def readFile(filename):
     lines = fr.readlines()
     fr.close()
     return ''.join(lines)
+
+
+def load_array(fnm, dtype='i'):
+    """ format: [len, item1, item2, ...] """
+    a = array.array(dtype)
+    with get_file_reader(fnm, 'rb') as f:
+        a.fromfile(f, struct.unpack("i", f.read(4))[0])
+    return a
