@@ -22,7 +22,7 @@ class FileWriter:
         ext = os.path.splitext(fname)[1]
         if ext == '.gz': self.f = gzip.open(fname, 'wt')
         elif ext == '.bz2': self.f = bz2.open(fname, 'wt')
-        self.f = open(fname, 'w')
+        else: self.f = open(fname, 'w')
 
     def __enter__(self):
         return self
