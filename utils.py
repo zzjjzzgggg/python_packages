@@ -54,7 +54,7 @@ def pretty_time(x):
 
 def insert_suffix(fnm, suffix):
     """ /dir/to/file.ext -> /dir/to/file_sfx.ext """
-    name, ext = os.path.split(fnm)
+    name, ext = os.path.splitext(fnm)
     return "{}_{}{}".format(name, suffix, ext)
 
 
@@ -68,3 +68,7 @@ class Timer:
     def tmstr(self):
         tme = time.time() - self.start
         return pretty_time(tme)
+
+
+if __name__ == '__main__':
+    print(insert_suffix("/this/is/a/test.txt", "hello"))
