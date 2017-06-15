@@ -207,6 +207,8 @@ def loadTupleList(fname, funs):
             rst.append(tuple([fio.get(i, f) for i, f in enumerate(funs)]))
     return rst
 
+def loadIntIntList(fname):
+    return loadTupleList(fname, (int, int))
 
 def loadIntFltList(fname):
     return loadTupleList(fname, (int, float))

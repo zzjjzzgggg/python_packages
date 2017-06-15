@@ -3,6 +3,7 @@
 
 import time
 import re
+import os
 
 REX_NUM = re.compile(r'\d+')
 REX_MONEY = re.compile(r'[$￥\d\.]+')
@@ -49,6 +50,12 @@ def pretty_time(x):
     if x < 60: return '{:.2f} secs'.format(x)
     elif x < 3600: return '{:.2f} mins'.format(x / 60)
     else: return '{:.2f} hrs'.format(x / 3600)
+
+
+def insert_suffix(fnm, suffix):
+    """ /dir/to/file.ext -> /dir/to/file_sfx.ext """
+    name, ext = os.path.split(fnm)
+    return "{}_{}{}".format(name, suffix, ext)
 
 
 class Timer:
