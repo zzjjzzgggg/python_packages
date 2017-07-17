@@ -123,9 +123,14 @@ def get_cdf(pdf, fnm=None, sep="\t"):
         fw.close()
     return cdf
 
-
 def get_frequency(keys):
     '''state the frequency of keys'''
     freq = Counter()
     for key in keys: freq[key] += 1
     return sorted(freq.items())
+
+def get_frequency_pdf(keys):
+    '''state pdf of the frequency of keys'''
+    freq = Counter()
+    for key in keys: freq[key] += 1
+    return get_pdf(freq.values())
