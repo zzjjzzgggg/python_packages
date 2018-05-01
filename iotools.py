@@ -77,7 +77,7 @@ class FileIO:
         return len(self.items)
 
     def gets(self, types):
-        return [fun(item) for fun, item in zip(types, self.items[:len(types)])]
+        return [fun(item) for fun, item in zip(types, self.items)]
 
     def getStrs(self):
         return self.items
