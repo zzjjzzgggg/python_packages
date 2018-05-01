@@ -77,8 +77,7 @@ class FileIO:
         return len(self.items)
 
     def gets(self, types):
-        return [fun(item) for fun, item
-                in zip(types, self.items)]
+        return [fun(item) for fun, item in zip(types, self.items[:len(types)])]
 
     def getStrs(self):
         return self.items
@@ -107,8 +106,7 @@ class FileIO:
         return datetime.strptime(self.items[i], '%Y-%m-%d')
 
     def getDate(self, i):
-        return datetime.strptime(self.items[i],
-                                 '%Y-%m-%d %H:%M:%S')
+        return datetime.strptime(self.items[i], '%Y-%m-%d %H:%M:%S')
 
     def getDateFromTimestamp(self, i):
         return datetime.fromtimestamp(int(self.items[i]))
@@ -118,15 +116,15 @@ class FileIO:
         return int(time.mktime(d.timetuple()))
 
     def getISODate(self, i):
-        return datetime.strptime(self.items[i][:19],
-                                 '%Y-%m-%dT%H:%M:%S')
+        return datetime.strptime(self.items[i][:19], '%Y-%m-%dT%H:%M:%S')
 
     def getLN(self):
         return self.ln
 
 
 class JsonStorer:
-    def __init__(self, prefix, mx_rows=1E6, sufix='.json.gz', data_dir='data/'):
+    def __init__(self, prefix, mx_rows=1E6, sufix='.json.gz',
+                 data_dir='data/'):
         self.fw = None
         self.writed = 0
         self.mx_rows = mx_rows
@@ -137,9 +135,8 @@ class JsonStorer:
     def __check(self):
         if self.writed >= self.mx_rows and self.fw is not None: self.close()
         if self.fw is None:
-            self.fw = FileWriter(
-                '{}{}_{:.0f}{}'.format(self.data_dir, self.prefix, time.time(),
-                                       self.sufix))
+            self.fw = FileWriter('{}{}_{:.0f}{}'.format(
+                self.data_dir, self.prefix, time.time(), self.sufix))
             self.writed = 0
 
     def write(self, item):
@@ -157,8 +154,10 @@ class JsonStorer:
 
 def get_format(e):
     if isinstance(e, tuple) or isinstance(e, list):
-        tmp = ['{0[%d]:.6e}' % i if isinstance(val, float) else
-               '{0[%d]}' % i for i, val in enumerate(e)]
+        tmp = [
+            '{0[%d]:.6e}' % i if isinstance(val, float) else '{0[%d]}' % i
+            for i, val in enumerate(e)
+        ]
         fmt = '\t'.join(tmp)
     else:
         fmt = '{:.6e}' if isinstance(e, float) else '{}'
@@ -172,7 +171,8 @@ def saveList(data, filename):
         e = next(it)
         fmt = get_format(e)
         fw.write(fmt.format(e))
-        for e in it: fw.write(fmt.format(e))
+        for e in it:
+            fw.write(fmt.format(e))
     print("saved to", filename)
 
 
@@ -188,7 +188,8 @@ def saveSet(slist, filename):
 def loadList(fname, col=0, fun=str):
     rst = []
     with FileIO(fname) as fio:
-        while fio.next(): rst.append(fio.get(col, fun))
+        while fio.next():
+            rst.append(fio.get(col, fun))
     return rst
 
 
@@ -273,7 +274,8 @@ def loadIntPrSet(filename, rst=None):
     if rst is None:
         rst = set()
     with FileIO(filename) as fio:
-        while fio.next(): rst.add((fio.getInt(0), fio.getInt(1)))
+        while fio.next():
+            rst.add((fio.getInt(0), fio.getInt(1)))
     return rst
 
 
@@ -281,7 +283,8 @@ def loadIntPrList(filename, rst=None):
     if rst is None:
         rst = []
     with FileIO(filename) as fio:
-        while fio.next(): rst.append((fio.getInt(0), fio.getInt(1)))
+        while fio.next():
+            rst.append((fio.getInt(0), fio.getInt(1)))
     return rst
 
 
@@ -289,7 +292,8 @@ def loadStrPrList(filename, rst=None):
     if rst is None:
         rst = []
     with FileIO(filename) as fio:
-        while fio.next(): rst.append((fio.getStr(0), fio.getStr(1)))
+        while fio.next():
+            rst.append((fio.getStr(0), fio.getStr(1)))
     return rst
 
 
@@ -297,7 +301,8 @@ def loadFltPrList(filename, rst=None):
     if rst is None:
         rst = []
     with FileIO(filename) as fio:
-        while fio.next(): rst.append((fio.getFlt(0), fio.getFlt(1)))
+        while fio.next():
+            rst.append((fio.getFlt(0), fio.getFlt(1)))
     return rst
 
 
@@ -305,20 +310,23 @@ def loadIntsList(filename, rst=None):
     if rst is None:
         rst = []
     with FileIO(filename) as fio:
-        while fio.next(): rst.append(fio.getInts())
+        while fio.next():
+            rst.append(fio.getInts())
     return rst
 
 
 def loadIntFltPrMap(filename):
     rst = {}
     with FileIO(filename) as fio:
-        while fio.next(): rst[fio.getInt(0)] = (fio.getFlt(1), fio.getFlt(2))
+        while fio.next():
+            rst[fio.getInt(0)] = (fio.getFlt(1), fio.getFlt(2))
     return rst
 
 
 def writeFile(data, filename):
     if data is None or len(data) == 0: return
-    with FileWriter(filename) as fw: fw.write(data)
+    with FileWriter(filename) as fw:
+        fw.write(data)
 
 
 def readFile(filename):
