@@ -176,6 +176,13 @@ def saveList(data, filename):
     print("saved to", filename)
 
 
+def saveList(data, filename, fmt):
+    with FileWriter(filename) as fw:
+        for e in dat:
+            fw.write(fmt.format(e))
+    print("saved to", filename)
+
+
 def saveMap(tmap, filename):
     saveList(tmap.items(), filename)
 
