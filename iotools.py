@@ -177,8 +177,9 @@ def saveList(data, filename):
 
 
 def saveList(data, filename, fmt):
+    ''' example fmt = "{0[0]}\t{0[1]:.2f}\t{0[2]}\n" '''
     with FileWriter(filename) as fw:
-        for e in dat:
+        for e in data:
             fw.write(fmt.format(e))
     print("saved to", filename)
 
