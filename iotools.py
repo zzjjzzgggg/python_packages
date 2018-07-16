@@ -163,33 +163,32 @@ def get_format(e):
         fmt = '{:.6e}' if isinstance(e, float) else '{}'
     return fmt + "\n"
 
-
 # savers
-def saveList(data, filename):
+
+def saveList(data, filename, echo=True):
     with FileWriter(filename) as fw:
         it = iter(data)
         e = next(it)
         fmt = get_format(e)
         fw.write(fmt.format(e))
-        for e in it:
-            fw.write(fmt.format(e))
-    print("saved to", filename)
+        for e in it: fw.write(fmt.format(e))
+    if echo: print("saved to", filename)
 
 
-def saveList(data, filename, fmt):
+def saveListFmt(data, filename, fmt, echo=True):
     ''' example fmt = "{0[0]}\t{0[1]:.2f}\t{0[2]}\n" '''
     with FileWriter(filename) as fw:
         for e in data:
             fw.write(fmt.format(e))
-    print("saved to", filename)
+    if echo: print("saved to", filename)
 
 
-def saveMap(tmap, filename):
-    saveList(tmap.items(), filename)
+def saveMap(tmap, filename, echo=True):
+    saveList(tmap.items(), filename, echo)
 
 
-def saveSet(slist, filename):
-    saveList(slist, filename)
+def saveSet(slist, filename, echo=True):
+    saveList(slist, filename, echo)
 
 
 # loader
