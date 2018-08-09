@@ -1,7 +1,6 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-
 import math
 from collections import Counter
 from iotools import FileWriter
@@ -35,8 +34,10 @@ def stat_all(samples, fnm='stats.dat'):
             ccdf[v] += 1
             cdf[v] += 1
             sumv += 1
-    for i in range(L - 2, 0, -1): ccdf[i] += ccdf[i + 1]
-    for i in range(1, L): cdf[i] += cdf[i - 1]
+    for i in range(L - 2, 0, -1):
+        ccdf[i] += ccdf[i + 1]
+    for i in range(1, L):
+        cdf[i] += cdf[i - 1]
     exp = var = 0
     for i in range(L):
         pdf[i] /= sumv
@@ -49,8 +50,7 @@ def stat_all(samples, fnm='stats.dat'):
     fw.write('#max X: {:d}\n'.format(maxX))
     fw.write('#total: {:.2f}\n'.format(sumv))
     fw.write('#expectation: {:.2f}\n'.format(exp))
-    fw.write('#variance: {:.6f}\n'
-             .format(math.sqrt(var - exp * exp)))
+    fw.write('#variance: {:.6f}\n'.format(math.sqrt(var - exp * exp)))
     fw.write('#X, FREQ, PDF, CDF, CCDF\n')
     for i in range(L):
         if pdf[i] + ccdf[i + 1] > 1E-10:
@@ -62,13 +62,14 @@ def stat_all(samples, fnm='stats.dat'):
 def get_pdf(samples, fnm=None):
     num_samples = len(samples)
     cnt = Counter()
-    for s in samples: cnt[s] += 1
+    for s in samples:
+        cnt[s] += 1
     pdf = [(key, val / num_samples) for key, val in cnt.items()]
     pdf.sort()
     if fnm is not None:
-        with open(fnm, 'w') as fw:
+        with FileWriter(fnm) as fw:
             for k, v in pdf:
-                fw.write('{:d}\t{:.6e}\n'.format(k, v))
+                fw.write('{}\t{}\t{:.6e}\n'.format(k, cnt[k], v))
     return pdf
 
 
@@ -82,26 +83,26 @@ def get_histogram(samples, window_size, fnm=None):
     hist = [(k, v / N) for k, v in cnt.items()]
     hist.sort()
     if fnm is not None:
-        with open(fnm, 'w') as fw:
-            for k, v in hist: fw.write('{:g}\t{:.6e}\n'.format(k, v))
+        with FileWriter(fnm) as fw:
+            for k, v in hist:
+                fw.write('{:g}\t{:.6e}\n'.format(k, v))
     return hist
 
 
 def get_ccdf(pdf_or_freq, fnm=None):
-    '''
-    `pdf_or_freq' is a list of tuples [(x, y), ...], where
-    x>=0 is an integer, and y is the amount of probability
-    mass for x. Here y does not need to be normlized, and it
-    could be the frequency of x.
-    Return a CCDF list: [(-1,P(X>-1)), (0,P(X>0)), ...]
+    '''`pdf_or_freq' is a list of tuples [(x, y), ...], where x>=0 is an integer,
+    and y is the amount of probability mass for x. Here y does not need to be
+    normlized, and it could be the frequency of x. Return a CCDF list:
+    [(-1,P(X>-1)), (0,P(X>0)), ...]
+
     '''
     ccdf = [y for x, y in pdf_or_freq]
-    for i in range(len(ccdf) - 2, -1, -1): ccdf[i] += ccdf[i + 1]
+    for i in range(len(ccdf) - 2, -1, -1):
+        ccdf[i] += ccdf[i + 1]
     if fnm is not None:
-        fw = FileWriter(fnm)
-        for e, y in zip(pdf_or_freq, ccdf):
-            fw.write('{}\t{}\t{:.6e}\n'.format(e[0] - 1, y, y / ccdf[0]))
-        fw.close()
+        with FileWriter(fnm) as fw:
+            for e, y in zip(pdf_or_freq, ccdf):
+                fw.write('{}\t{}\t{:.6e}\n'.format(e[0] - 1, y, y / ccdf[0]))
     return ccdf
 
 
@@ -115,22 +116,26 @@ def get_cdf(pdf, fnm=None, sep="\t"):
     pdf is a list [(x, px)...], and return list [P(X<=x)].
     '''
     cdf = [p for x, p in pdf]
-    for i in range(1, len(cdf)): cdf[i] += cdf[i - 1]
+    for i in range(1, len(cdf)):
+        cdf[i] += cdf[i - 1]
     if fnm is not None:
-        fw = FileWriter(fnm)
-        for e, y in zip(pdf, cdf):
-            fw.write('{1:d}{0}{2:.6e}\n'.format(sep, e[0], y))
-        fw.close()
+        with FileWriter(fnm) as fw:
+            for e, y in zip(pdf, cdf):
+                fw.write('{1:d}{0}{2:.6e}\n'.format(sep, e[0], y))
     return cdf
+
 
 def get_frequency(keys):
     '''state the frequency of keys'''
     freq = Counter()
-    for key in keys: freq[key] += 1
+    for key in keys:
+        freq[key] += 1
     return sorted(freq.items())
+
 
 def get_frequency_pdf(keys):
     '''state pdf of the frequency of keys'''
     freq = Counter()
-    for key in keys: freq[key] += 1
+    for key in keys:
+        freq[key] += 1
     return get_pdf(freq.values())
