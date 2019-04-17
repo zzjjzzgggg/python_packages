@@ -70,7 +70,7 @@ class FileIO:
                 return False  # empty line = EOF
 
     def getLine(self):
-        """ return original line with '\n' """
+        """return original line (end with '\\n')"""
         return self.l
 
     def getItemsCnt(self):
