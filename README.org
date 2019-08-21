@@ -1,5 +1,5 @@
 For example, if you want to install personal package ~iotools~, just enter the
-folder iotools: 
+folder ~iotools~: 
 
 cd iotools
 
