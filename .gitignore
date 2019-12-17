@@ -1,5 +1,6 @@
+__pycache__/
+.mypy_cache/
 *.pyc
 *.txt
 *.dat
 *.swp
-__pycache__/

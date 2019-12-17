@@ -78,7 +78,7 @@ def get_histogram(samples, window_size, fnm=None):
     N = len(samples)
     cnt = Counter()
     for s in samples:
-        key = math.floor(s / window_size) * window_size
+        key = math.ceil(s / window_size) * window_size
         cnt[key] += 1
     hist = [(k, v / N) for k, v in cnt.items()]
     hist.sort()
