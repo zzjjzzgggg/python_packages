@@ -73,7 +73,7 @@ def get_pdf(samples, fnm=None):
     return pdf
 
 
-def get_histogram(samples, window_size, fnm=None):
+def get_histogram(samples, window_size=1, fnm=None):
     ''' elements in samples are positive floats '''
     N = len(samples)
     cnt = Counter()
