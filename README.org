@@ -9,11 +9,12 @@
   git clone https://github.com/zzjjzzgggg/python_packages.git
   #+end_src
 
-  Not your can selectively install each individual library. For example, to
-  install package ~iotools~, run the following commands.
+  Now you can selectively install each individual library. For example, to install
+  package ~iotools~, run the following commands.
   #+begin_src shell
   cd iotools
   pip3 install -e .
   #+end_src
+
   This will install the package with a symlink, so that changes to the source file
   will be immediately available to other users of the package on our system.
