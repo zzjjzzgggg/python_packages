@@ -10,10 +10,9 @@
   #+end_src
 
   Now you can selectively install each individual library. For example, to install
-  package ~iotools~, run the following commands.
+  package ~iotools~, run the following command.
   #+begin_src shell
-  cd iotools
-  pip3 install -e .
+  pip3 install -e iotools
   #+end_src
 
   This will install the package with a symlink, so that changes to the source file
