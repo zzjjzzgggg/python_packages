@@ -1,14 +1,14 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import array
 import bz2
 import gzip
 import json
 import os
+import struct
 import sys
 import time
-import array
-import struct
 from datetime import datetime
 
 
@@ -123,8 +123,7 @@ class FileIO:
 
 
 class JsonStorer:
-    def __init__(self, prefix, mx_rows=1E6, sufix='.json.gz',
-                 data_dir='data/'):
+    def __init__(self, prefix, mx_rows=1E6, sufix='.json.gz', data_dir='data/'):
         self.fw = None
         self.writed = 0
         self.mx_rows = mx_rows
@@ -135,8 +134,9 @@ class JsonStorer:
     def __check(self):
         if self.writed >= self.mx_rows and self.fw is not None: self.close()
         if self.fw is None:
-            self.fw = FileWriter('{}{}_{:.0f}{}'.format(
-                self.data_dir, self.prefix, time.time(), self.sufix))
+            self.fw = FileWriter('{}{}_{:.0f}{}'.format(self.data_dir,
+                                                        self.prefix, time.time(),
+                                                        self.sufix))
             self.writed = 0
 
     def write(self, item):
@@ -163,7 +163,9 @@ def get_format(e):
         fmt = '{:.6e}' if isinstance(e, float) else '{}'
     return fmt + "\n"
 
+
 # savers
+
 
 def saveList(data, filename, echo=True):
     with FileWriter(filename) as fw:
@@ -171,7 +173,8 @@ def saveList(data, filename, echo=True):
         e = next(it)
         fmt = get_format(e)
         fw.write(fmt.format(e))
-        for e in it: fw.write(fmt.format(e))
+        for e in it:
+            fw.write(fmt.format(e))
     if echo: print("saved to", filename)
 
 
