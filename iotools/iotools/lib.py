@@ -79,8 +79,8 @@ class FileIO:
     def gets(self, types):
         return [fun(item) for fun, item in zip(types, self.items)]
 
-    def getStrs(self):
-        return self.items
+    def getStrs(self, idx=None):
+        return self.items if idx is None else [self.items[i] for i in idx]
 
     def getInts(self, idx=None):
         return [int(item) for item in self.items] if idx is None else \
